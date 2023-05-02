@@ -14,7 +14,7 @@ Requires:
 
 - [Go](https://go.dev/learn/) >= 1.18
 - [Wails](https://wails.io/) 
-
+- Run `wails doctor` to endure any OS-specific dependencies are installed
 
 Steps:
 
