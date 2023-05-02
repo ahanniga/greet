@@ -1,0 +1,83 @@
+body {
+    margin: 0;
+    font-family: "Arial", "Helvetica Neue", "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+    "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", sans-serif;
+}
+
+/*::-webkit-scrollbar {*/
+/*    width: 0px;*/
+/*    background: transparent;*/
+/*}*/
+
+@font-face {
+    font-family: "Nunito";
+    font-style: normal;
+    font-weight: 400;
+    src: local(""),
+    url("fonts/nunito-v16-latin-regular.woff2") format("woff2");
+}
+
+#app {
+    height: 100vh;
+}
+
+.w-label-60 {
+    width: 60px;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+
+/* Track */
+::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(127,127,127,0.1);
+    -webkit-border-radius: 8px;
+    border-radius: 8px;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    -webkit-border-radius: 8px;
+    border-radius: 8px;
+    background: rgba(127,127,127,0.2);
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.2);
+}
+/*::-webkit-scrollbar-thumb:window-inactive {*/
+/*    background: rgba(0,0,0,0.2);*/
+/*}*/
+
+::-webkit-scrollbar-corner
+{
+    background-color: rgba(0,0,0,0.0);
+}
+
+.modal-dialog .card.d-block.m-1 {
+    border: none;
+}
+
+div.card-body>div.card {
+    margin-bottom: 12px !important;
+    /*padding-top: 0px !important;*/
+    margin-left: 0 !important;
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-bottom: 0px;
+    background-color: var(--bs-tertiary-bg);
+}
+
+a {
+    text-decoration: none;
+}
+
+div.expander {
+    /*border-bottom-left-radius: 6px;*/
+    /*border-bottom-right-radius: 6px;*/
+    cursor: pointer;
+}
+div.expander:hover {
+    /*background-color: hsla(0, 0%, 50%, 0.1)*/
+    color: var(--bs-primary-text) !important;
+}
+
