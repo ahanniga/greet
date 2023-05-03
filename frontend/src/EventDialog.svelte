@@ -1,9 +1,10 @@
 <script>
     import {GetMyPubkey, GetTextNotesByEventIds, Nip19Decode} from "../wailsjs/go/main/App.js";
     import EventPost from "./EventPost.svelte";
+    import defaultEvent from './Util.svelte'
 
     let myPk;
-    let event;
+    let event = defaultEvent;
 
     const onEventDialog = (noteRef) => {
         event = false;
@@ -38,7 +39,7 @@
     <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content">
             <div class="modal-header">
-                <h1 class="modal-title fs-5" id="staticBackdropLabel">Event Source </h1>
+                <h1 class="modal-title fs-5" id="staticBackdropLabel">Event {event.id}</h1>
                 <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">

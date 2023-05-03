@@ -82,10 +82,10 @@
         return false;
     }
 
-    const getTaggedEventIds = () => {
+    const getTaggedEventIds = (ev) => {
         let evs = [];
-        for(let a = 0; event.tags && a < event.tags.length; a++) {
-            let tag = event.tags[a];
+        for(let a = 0; ev.tags && a < ev.tags.length; a++) {
+            let tag = ev.tags[a];
             if(tag[0] === "e") {
                 evs.push(tag)
             }
@@ -207,9 +207,9 @@
                 {/each}
             {/await}
         {:else}
-            {#if getTaggedEventIds().length > 0}
+            {#if getTaggedEventIds(event).length > 0}
                 <div class="text-muted m-0 p-0 expander" align="left" title="Expand tagged events" on:click={expandPost}>
-                    {getTaggedEventIds().length}
+                    {getTaggedEventIds(event).length}
                     {#if taggedEvents.length === 0}
                         {#if showWaiting}
                     <img style="margin-bottom: 3px" src="{loadingGif}" width="16" height="16">

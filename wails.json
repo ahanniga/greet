@@ -7,7 +7,7 @@
   "frontend:dev:watcher": "npm run dev",
   "frontend:dev:serverUrl": "auto",
   "author": {
-    "name": "Aidan Hannigan",
-    "email": "ahanniga@cisco.com"
+    "name": "A Hannigan",
+    "email": "github@hannigan.uk.com"
   }
 }

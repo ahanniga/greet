@@ -82,7 +82,9 @@
 
     const refreshFeed = () => {
         if(pendingNotes.length > 0) {
-            $eventStore = $eventStore.concat(pendingNotes);
+            for(let a = 0; a < pendingNotes.length; a++) {
+                addOrUpdateEvent(pendingNotes[a]);
+            }
             pendingNotes = [];
         } else {
             // Force a full refresh
@@ -177,6 +179,7 @@
                         File
                     </a>
                     <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#findEventDialog"><i class="bi bi-search me-2"/>Find Event</a></li>
                         <li><a class="dropdown-item" href="#" on:click={actionQuit}><i class="bi bi-box-arrow-left me-2"/>Quit</a></li>
                     </ul>
                 </li>

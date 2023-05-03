@@ -15,6 +15,7 @@
     import Reply from "./Reply.svelte";
     import ConfirmBoost from "./ConfirmBoost.svelte";
     import About from "./About.svelte";
+    import FindEvent from "./FindEvent.svelte";
 
     const onPinDialog = () => {
         document.getElementById('launchPinDialog').click();
@@ -30,6 +31,16 @@
         document.getElementById('launchFindContactDialog').click();
     }
     window.runtime.EventsOn('evFindContactDialog', onFindContactDialog);
+
+    const onFindEventDialog = () => {
+        document.getElementById('launchFindEventDialog').click();
+    }
+    window.runtime.EventsOn('evFindEventDialog', onFindEventDialog);
+
+    const onEventDialog = () => {
+        document.getElementById('launchEventDialog').click();
+    }
+    window.runtime.EventsOn('evEventDialog', onEventDialog);
 
     const onGenkeysDialog = () => {
         document.getElementById('launchGenKeysDialog').click();
@@ -47,11 +58,14 @@
 <a id="launchPinDialog" data-bs-toggle="modal" data-bs-target="#pinDialog"></a>
 <a id="launchLoginDialog" data-bs-toggle="modal" data-bs-target="#loginDialog"></a>
 <a id="launchFindContactDialog" data-bs-toggle="modal" data-bs-target="#findContactDialog"></a>
+<a id="launchFindEventDialog" data-bs-toggle="modal" data-bs-target="#findEventDialog"></a>
+<a id="launchEventDialog" data-bs-toggle="modal" data-bs-target="#eventDialog"></a>
 <a id="launchGenKeysDialog" data-bs-toggle="modal" data-bs-target="#getKeysDialog"></a>
 <a id="launchSuggestFollowsDialog" data-bs-toggle="modal" data-bs-target="#suggestFollowsDialog"></a>
 <PinDialog />
 <Login />
 <FindContact />
+<FindEvent />
 <GenKeys />
 <Post />
 <ProfileCard />
