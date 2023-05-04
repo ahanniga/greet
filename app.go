@@ -13,6 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -738,6 +739,65 @@ func (a *App) SaveNewKeys(creds map[string]string) error {
 	}
 
 	return a.SaveProfile(meta)
+}
+
+func (a *App) SaveContacts() (*string, error) {
+	profile := db.GetProfile(a.config.pubkey)
+	filename := fmt.Sprintf("%s-%s.json", profile.Meta.Name, profile.Npub)
+	path := filepath.Join(a.config.configDir, filename)
+
+	configOutput, err := PrettyStruct(followedPks)
+	if err != nil {
+		return nil, err
+	}
+
+	f, err := openFile(path, os.O_CREATE|os.O_RDWR|os.O_TRUNC)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	f.Write([]byte(configOutput + "\n"))
+
+	return &path, nil
+}
+
+func (a *App) RestoreContacts() (*string, error) {
+	profile := db.GetProfile(a.config.pubkey)
+	filename := fmt.Sprintf("%s-%s.json", profile.Meta.Name, profile.Npub)
+	path := filepath.Join(a.config.configDir, filename)
+	f, err := openFile(path, os.O_RDONLY)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	fileinfo, err := f.Stat()
+	if err != nil {
+		return nil, err
+	}
+	filesize := fileinfo.Size()
+	buffer := make([]byte, filesize)
+	_, err = f.Read(buffer)
+	if err != nil {
+		return nil, err
+	}
+
+	contacts := []string{}
+	err = json.Unmarshal(buffer, &contacts)
+	if err != nil {
+		log.Err(err)
+	}
+
+	log.Debug().Msgf("Loaded %d contacts from %s", len(contacts), path)
+
+	if len(contacts) > 0 {
+		followedPks = []string{}
+		a.FollowContact(contacts)
+	} else {
+		return nil, errors.New("No contacts in file. Changes not published")
+	}
+
+	return &path, nil
 }
 
 func (a *App) SaveProfile(metadata ProfileMetadata) error {

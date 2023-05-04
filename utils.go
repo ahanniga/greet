@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"github.com/nbd-wtf/go-nostr"
+	"os"
 )
 
 func contains(s []string, str string) bool {
@@ -65,4 +66,17 @@ func chunkSlice(slice []string, chunkSize int) [][]string {
 	}
 
 	return chunks
+}
+
+func openFile(path string, flags int) (*os.File, error) {
+	f, err := os.OpenFile(path, flags, 0644)
+	if err != nil {
+		// Does not exist? Create
+		f, err = openFile(path, os.O_CREATE|os.O_RDWR|os.O_TRUNC)
+		if err != nil {
+			return nil, err
+		}
+		return f, err
+	}
+	return f, nil
 }

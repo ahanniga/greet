@@ -51,7 +51,11 @@ export function RefreshFeed(arg1:string,arg2:boolean):Promise<void>;
 
 export function RefreshFeedReset(arg1:string):Promise<void>;
 
+export function RestoreContacts():Promise<any>;
+
 export function SaveConfigDark(arg1:boolean):Promise<void>;
+
+export function SaveContacts():Promise<any>;
 
 export function SaveNewKeys(arg1:{[key: string]: string}):Promise<void>;
 

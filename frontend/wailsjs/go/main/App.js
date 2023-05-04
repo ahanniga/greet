@@ -98,8 +98,16 @@ export function RefreshFeedReset(arg1) {
   return window['go']['main']['App']['RefreshFeedReset'](arg1);
 }
 
+export function RestoreContacts() {
+  return window['go']['main']['App']['RestoreContacts']();
+}
+
 export function SaveConfigDark(arg1) {
   return window['go']['main']['App']['SaveConfigDark'](arg1);
+}
+
+export function SaveContacts() {
+  return window['go']['main']['App']['SaveContacts']();
 }
 
 export function SaveNewKeys(arg1) {

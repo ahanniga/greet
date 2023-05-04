@@ -2,54 +2,50 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
-	"log"
+	"github.com/rs/zerolog/log"
 	"os"
 	"path/filepath"
 )
 
 type Config struct {
-	pubkey     string
-	Privkey    string
-	privKeyHex string
-	pin        string
-	Relays     []*Relay
-	follows    []*string
-	Dark       bool
+	pubkey        string
+	Privkey       string
+	privKeyHex    string
+	pin           string
+	Relays        []*Relay
+	follows       []*string
+	Dark          bool
+	userConfigDir string
+	configDir     string
+	configPath    string
 }
 
 func NewConfig() *Config {
-	return &Config{
-		pubkey:     "",
-		Privkey:    "",
-		privKeyHex: "",
-		pin:        "",
-		Relays:     []*Relay{},
-		follows:    []*string{},
-		Dark:       true,
-	}
-}
-
-func (c *Config) OpenConfigFile(flags int) (*os.File, error) {
 	userConfigDir, _ := os.UserConfigDir()
 	configDir := filepath.Join(userConfigDir, "greet")
 	configPath := filepath.Join(configDir, "config.json")
 
-	fmt.Println("User config dir", userConfigDir)
-	fmt.Println("Config dir", configDir)
-	fmt.Println("Config path", configPath)
+	log.Debug().Msgf("User config dir %s", userConfigDir)
+	log.Debug().Msgf("Config dir %s", configDir)
+	log.Debug().Msgf("Config path %s", configPath)
 
-	_ = os.Mkdir(configDir, 0755)
-	f, err := os.OpenFile(configPath, flags, 0644)
-	if err != nil {
-		// Does not exist? Create
-		f, err = c.OpenConfigFile(os.O_CREATE | os.O_RDWR | os.O_TRUNC)
-		if err != nil {
-			log.Panicln("Could not open or create the config file")
-		}
-		return f, err
+	return &Config{
+		pubkey:        "",
+		Privkey:       "",
+		privKeyHex:    "",
+		pin:           "",
+		Relays:        []*Relay{},
+		follows:       []*string{},
+		Dark:          true,
+		userConfigDir: userConfigDir,
+		configDir:     configDir,
+		configPath:    configPath,
 	}
-	return f, nil
+}
+
+func (c *Config) OpenConfigFile(flags int) (*os.File, error) {
+	_ = os.Mkdir(c.configDir, 0755)
+	return openFile(c.configPath, flags)
 }
 
 func (c *Config) Load() error {
@@ -88,7 +84,7 @@ func (c *Config) Load() error {
 
 	err = json.Unmarshal(buffer, &c)
 	if err != nil {
-		log.Panicln(err)
+		log.Err(err)
 	}
 
 	return nil

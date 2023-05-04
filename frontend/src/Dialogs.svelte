@@ -16,6 +16,7 @@
     import ConfirmBoost from "./ConfirmBoost.svelte";
     import About from "./About.svelte";
     import FindEvent from "./FindEvent.svelte";
+    import MessageDialog from "./MessageDialog.svelte";
 
     const onPinDialog = () => {
         document.getElementById('launchPinDialog').click();
@@ -81,6 +82,7 @@
 <EventDialog />
 <Reply />
 <ConfirmBoost />
+<MessageDialog />
 <About />
 
 

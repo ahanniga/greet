@@ -1,7 +1,6 @@
 <script>
     import Follow from "./Follow.svelte";
     import EventPost from "./EventPost.svelte";
-    import Footer from "./Footer.svelte";
     import {
         Quit,
         GetMyPubkey,
@@ -9,13 +8,16 @@
         GetTextNotesByPubkeysOptions,
         RefreshFeedReset,
         SaveConfigDark,
-        GetContactProfile
+        GetContactProfile,
+        SaveContacts,
+        RestoreContacts
     } from '../wailsjs/go/main/App.js'
     import { eventStore, contactStore } from './store.js'
     import nostrIcon from "./assets/images/nostr.png"
     import defaultProfile from "./Util.svelte"
     import {onMount} from "svelte";
     import Dialogs from "./Dialogs.svelte";
+    import {EventsEmit} from "../wailsjs/runtime/runtime.js";
 
     let pendingNotes = [];
     let myPk;
@@ -179,6 +181,38 @@
         autoRefresh = !autoRefresh;
     }
 
+    const saveContacts = () => {
+        SaveContacts().then((path)=>{
+            EventsEmit("evMessageDialog", {
+                title: "Backup Contacts",
+                message: "Contacts have been saved to:<br><br><code>" +
+                    path + "</code><br><br>If required, use the Restore option to load and re-publish your contacts."
+            });
+            console.log("Save contacts successful")
+        }).catch((e)=>{
+            console.error(e);
+            EventsEmit("evMessageDialog", {
+                title: "Backup Contacts Failed",
+                message: "Save contacts failed: " + e,
+                iconClass: "bi-exclamation-circle"
+            });
+        });
+    }
+    const loadContacts = () => {
+        RestoreContacts().then((path)=>{
+            EventsEmit("evMessageDialog", {
+                title: "Restore Contacts",
+                message: "Contacts have been restored and re-published from:<br><br><code>" + path
+            });
+        }).catch((e)=>{
+            console.error(e);
+            EventsEmit("evMessageDialog", {
+                title: "Backup Contacts Failed",
+                message: "Save contacts failed: " + e,
+                iconClass: "bi-exclamation-circle"
+            });
+        });
+    }
 
     $: pendingCount = pendingNotes.length;
 </script>
@@ -196,17 +230,18 @@
                         File
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#findEventDialog"><i class="bi bi-search me-2"/>Find Event</a></li>
-                        <li><a class="dropdown-item" href="#" on:click={actionQuit}><i class="bi bi-box-arrow-left me-2"/>Quit</a></li>
+                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#findEventDialog"><i class="bi bi-search me-3"/>Find Event</a></li>
+                        <li><a class="dropdown-item" href="#" on:click={actionQuit}><i class="bi bi-box-arrow-left me-3"/>Quit</a></li>
                     </ul>
+
                 </li>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown" href="#" role="button" data-bs-toggle="dropdown">
                         Post
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#postDialog" on:click={newPostDialog}><i class="bi bi-file-plus me-2"/>New Post...</a></li>
-                        <li><a class="dropdown-item" href="#" on:click={refreshFeed}><i class="bi bi-arrow-clockwise me-2"/>Refresh Feed</a></li>
+                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#postDialog" on:click={newPostDialog}><i class="bi bi-file-plus me-3"/>New Post...</a></li>
+                        <li><a class="dropdown-item" href="#" on:click={refreshFeed}><i class="bi bi-arrow-clockwise me-3"/>Refresh Feed</a></li>
                     </ul>
                 </li>
 
@@ -215,13 +250,13 @@
                         Contact
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#findContactDialog" on:click={searchContact}><i class="bi bi-file-plus me-2"/>Find Contact</a></li>
-                        <li><a class="dropdown-item" href="#" on:click={onRefreshContacts}><i class="bi bi-arrow-clockwise me-2"/>Refresh Contact List</a></li>
+                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#findContactDialog" on:click={searchContact}><i class="bi bi-search me-3"/>Find Contact</a></li>
+                        <li><a class="dropdown-item" href="#" on:click={onRefreshContacts}><i class="bi bi-arrow-clockwise me-3"/>Refresh Contact List</a></li>
                         <li>
                             <hr class="dropdown-divider">
                         </li>
-                        <li><a class="dropdown-item disabled" href="#"  on:click={()=>{}}><i class="bi bi-file-arrow-down me-2"/>Export to File...</a></li>
-                        <li><a class="dropdown-item disabled" href="#"  on:click={()=>{}}><i class="bi bi-file-arrow-up me-2"/>Import from File...</a></li>
+                        <li><a class="dropdown-item" href="#"  on:click={saveContacts}><i class="bi bi-file-arrow-down me-3"/>Backup contacts</a></li>
+                        <li><a class="dropdown-item" href="#"  on:click={loadContacts}><i class="bi bi-file-arrow-up me-3"/>Restore contacts</a></li>
                     </ul>
                 </li>
 
@@ -230,9 +265,9 @@
                         Config
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#relayDialog" on:click={relayDialog}><i class="bi bi-hdd-network me-2"/>Relays</a></li>
-                        <li><a class="dropdown-item" href="#" on:click={myProfile}><i class="bi bi-person-badge me-2"/>My Profile</a></li>
-                        <li><a class="dropdown-item" href="#loginDialog" data-bs-toggle="modal"><i class="bi-box-arrow-in-right me-2"/>Login</a></li>
+                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#relayDialog" on:click={relayDialog}><i class="bi bi-hdd-network me-3"/>Relays</a></li>
+                        <li><a class="dropdown-item" href="#" on:click={myProfile}><i class="bi bi-person-badge me-3"/>My Profile</a></li>
+                        <li><a class="dropdown-item" href="#loginDialog" data-bs-toggle="modal"><i class="bi-box-arrow-in-right me-3"/>Login</a></li>
                         <li>
                             <hr class="dropdown-divider">
                         </li>
@@ -255,13 +290,13 @@
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown" href="#" role="button" data-bs-toggle="dropdown" >Help</a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#aboutDialog" data-bs-toggle="modal"  ><i class="bi-info-circle me-2"/>About</a></li>
+                        <li><a class="dropdown-item" href="#aboutDialog" data-bs-toggle="modal"  ><i class="bi-info-circle me-3"/>About</a></li>
                     </ul>
                 </li>
             </ul>
             <ul class="navbar-nav ms-auto">
-                <li class="nav-item "><button class="btn btn-outline-warning me-2" data-bs-toggle="modal" data-bs-target="#postDialog" on:click={newPostDialog} >Post</button></li>
-                <li class="nav-item "><button class="btn btn-outline-success me-2" on:click={refreshFeed}>Refresh
+                <li class="nav-item "><button class="btn btn-outline-warning me-3" data-bs-toggle="modal" data-bs-target="#postDialog" on:click={newPostDialog} >Post</button></li>
+                <li class="nav-item "><button class="btn btn-outline-success me-3" on:click={refreshFeed}>Refresh
                     {#if pendingCount > 0}
                     <span class="badge bg-success">{pendingCount}</span>
                     {/if}
@@ -308,7 +343,7 @@
             </div>
         </div>
         <div class="row flex-shrink-0 ">
-            <Footer/>
+<!--            <Footer/>-->
         </div>
     </div>
 </main>
