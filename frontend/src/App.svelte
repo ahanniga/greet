@@ -128,8 +128,10 @@
     }
 
     const myProfile = () => {
-        GetContactProfile(myPk).then((p)=>{
-            window.runtime.EventsEmit("evProfileCard", p);
+        GetMyPubkey().then((pk)=>{
+            GetContactProfile(pk).then((p)=>{
+                window.runtime.EventsEmit("evProfileCard", p);
+            });
         });
     }
 
