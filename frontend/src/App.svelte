@@ -1,4 +1,10 @@
 <script>
+    /**
+     *  Main application component
+     *  Most of the backend events are handled here. When the user submits their key, an evPkChange event is
+     *  caught, the user icon set, contacts refreshed and the feed loaded.
+     */
+
     import Follow from "./Follow.svelte";
     import EventPost from "./EventPost.svelte";
     import {
@@ -14,17 +20,28 @@
     } from '../wailsjs/go/main/App.js'
     import { eventStore, contactStore } from './store.js'
     import nostrIcon from "./assets/images/nostr.png"
-    import defaultProfile from "./Util.svelte"
-    import {onMount} from "svelte";
+    import loadingGif from "./assets/images/loading.gif"
     import Dialogs from "./Dialogs.svelte";
     import {EventsEmit} from "../wailsjs/runtime/runtime.js";
 
     let pendingNotes = [];
-    let myPk;
+    let myPk = false;
+    let myProfile = false;
     let filtering = false;
-    let filterProfile = defaultProfile;
+    let filterProfile = false;
     let dark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
     let autoRefresh = false;
+
+    const onPkChange = (pk) => {
+        myPk = pk;
+        GetContactProfile(pk).then((p)=>{
+            myProfile = p;
+            onRefreshContacts().then(()=>{
+                resetFilterAndRefresh();
+            });
+        });
+    }
+    window.runtime.EventsOn('evPkChange', onPkChange);
 
     const onRefreshNote = (event) => {
         if(autoRefresh) {
@@ -106,30 +123,25 @@
 
     const onRefreshContacts = () => {
         $contactStore = [];
-        RefreshContactProfiles();
+        return RefreshContactProfiles();
     }
     window.runtime.EventsOn('evRefreshContacts', onRefreshContacts);
 
-    const newPostDialog = () => {
+    const launchPostDialog = () => {
         window.runtime.EventsEmit("evPostDialog");
     }
-    const relayDialog = () => {
+    const launchRelayDialog = () => {
         window.runtime.EventsEmit("evRelayDialog");
     }
-    const searchContact = () => {
+    const launchSearchContact = () => {
         window.runtime.EventsEmit("evFindContactDialog");
     }
-
-    onMount(async () => {
-        const res = await GetMyPubkey();
-        myPk = await res;
-    });
 
     const actionQuit = (e) => {
         Quit();
     }
 
-    const myProfile = () => {
+    const launchProfileCard = () => {
         GetMyPubkey().then((pk)=>{
             GetContactProfile(pk).then((p)=>{
                 window.runtime.EventsEmit("evProfileCard", p);
@@ -215,6 +227,7 @@
     }
 
     $: pendingCount = pendingNotes.length;
+
 </script>
 
 <style></style>
@@ -222,8 +235,11 @@
 <main>
     <div class="container-fluid d-flex flex-column vh-100 overflow-hidden">
         <nav class="navbar navbar-expand-lg">
-            <img src={nostrIcon}
-                 alt="" height="28" class="me-2">
+            {#if myProfile && myProfile.meta && myProfile.meta.picture}
+                <img src="{myProfile.meta.picture}" alt="" height="28" class="me-2">
+            {:else}
+                <img src="{nostrIcon}" alt="" height="28" class="me-2">
+            {/if}
             <ul class="navbar-nav">
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown" href="#" role="button" data-bs-toggle="dropdown">
@@ -240,7 +256,7 @@
                         Post
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#postDialog" on:click={newPostDialog}><i class="bi bi-file-plus me-3"/>New Post...</a></li>
+                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#postDialog" on:click={launchPostDialog}><i class="bi bi-file-plus me-3"/>New Post...</a></li>
                         <li><a class="dropdown-item" href="#" on:click={refreshFeed}><i class="bi bi-arrow-clockwise me-3"/>Refresh Feed</a></li>
                     </ul>
                 </li>
@@ -250,7 +266,7 @@
                         Contact
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#findContactDialog" on:click={searchContact}><i class="bi bi-search me-3"/>Find Contact</a></li>
+                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#findContactDialog" on:click={launchSearchContact}><i class="bi bi-search me-3"/>Find Contact</a></li>
                         <li><a class="dropdown-item" href="#" on:click={onRefreshContacts}><i class="bi bi-arrow-clockwise me-3"/>Refresh Contact List</a></li>
                         <li>
                             <hr class="dropdown-divider">
@@ -265,8 +281,8 @@
                         Config
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#relayDialog" on:click={relayDialog}><i class="bi bi-hdd-network me-3"/>Relays</a></li>
-                        <li><a class="dropdown-item" href="#" on:click={myProfile}><i class="bi bi-person-badge me-3"/>My Profile</a></li>
+                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#relayDialog" on:click={launchRelayDialog}><i class="bi bi-hdd-network me-3"/>Relays</a></li>
+                        <li><a class="dropdown-item" href="#" on:click={launchProfileCard}><i class="bi bi-person-badge me-3"/>My Profile</a></li>
                         <li><a class="dropdown-item" href="#loginDialog" data-bs-toggle="modal"><i class="bi-box-arrow-in-right me-3"/>Login</a></li>
                         <li>
                             <hr class="dropdown-divider">
@@ -295,7 +311,7 @@
                 </li>
             </ul>
             <ul class="navbar-nav ms-auto">
-                <li class="nav-item "><button class="btn btn-outline-warning me-3" data-bs-toggle="modal" data-bs-target="#postDialog" on:click={newPostDialog} >Post</button></li>
+                <li class="nav-item "><button class="btn btn-outline-warning me-3" data-bs-toggle="modal" data-bs-target="#postDialog" on:click={launchPostDialog} >Post</button></li>
                 <li class="nav-item "><button class="btn btn-outline-success me-3" on:click={refreshFeed}>Refresh
                     {#if pendingCount > 0}
                     <span class="badge bg-success">{pendingCount}</span>
@@ -307,7 +323,7 @@
             <div class="col-3">
                 <h6 class="border-bottom pb-2 mb-0">Follows <span class="ms-2 badge bg-primary-subtle">{$contactStore.length}</span>
                     <span class="float-end">
-                            <a href="#" class="text-muted" data-bs-toggle="modal" data-bs-target="#findContactDialog" data-bs-placement="bottom" title="Find contact by key or npub" on:click={searchContact}><i class="bi-search"></i></a>
+                            <a href="#" class="text-muted" data-bs-toggle="modal" data-bs-target="#findContactDialog" data-bs-placement="bottom" title="Find contact by key or npub" on:click={launchSearchContact}><i class="bi-search"></i></a>
                             <a href="#" class="text-muted" data-bs-placement="bottom" title="Refresh list" on:click={onRefreshContacts}><i class="bi-arrow-clockwise"></i></a>
                         </span>
                 </h6>
@@ -334,11 +350,15 @@
             </div>
             <div class='col mh-100 me-2 overflow-auto'>
                 <div class='row flex-grow-1 pe-2'>
-                    {#each sortEvents($eventStore) as event}
-                        {#if event.kind === 1 || event.kind === 6 }
-                            <EventPost {event} {myPk} />
-                        {/if}
-                    {/each}
+                    {#if $eventStore.length === 0 && myPk}
+                        <img src="{loadingGif}" style="width: 50px !important;">
+                    {:else}
+                        {#each sortEvents($eventStore) as event}
+                            {#if event.kind === 1 || event.kind === 6 }
+                                <EventPost {event} {myPk} />
+                            {/if}
+                        {/each}
+                    {/if}
                 </div>
             </div>
         </div>

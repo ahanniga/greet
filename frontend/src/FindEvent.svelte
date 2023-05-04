@@ -1,8 +1,14 @@
 <script>
+    /**
+     *  A small pop-up dialog where a user can paste in an event ID
+     *  If found, the event dialog is shown displaying the formatted note, user, profile, replies, etc.
+     */
+
     import { Nip19Decode } from "../wailsjs/go/main/App.js";
     import { EventsEmit } from "../wailsjs/runtime/runtime.js";
 
     const onFindEventDialog = () => {
+        document.getElementById('launchFindEventDialog').click();
         setTimeout(() => {
             document.getElementById('findEvent').focus();
         }, 500);
@@ -53,7 +59,7 @@
 </script>
 <style></style>
 
-<!-- Modal -->
+<a id="launchFindEventDialog" class="visually-hidden" data-bs-toggle="modal" data-bs-target="#findEventDialog"></a>
 <div class="modal fade" id="findEventDialog" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">

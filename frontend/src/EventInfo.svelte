@@ -1,4 +1,8 @@
 <script>
+    /**
+     *  Display the raw note event in a dialog
+     */
+
     let event = {};
 
     const onEventInfo = (ev) => {

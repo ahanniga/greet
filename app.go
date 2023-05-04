@@ -126,8 +126,7 @@ func (a *App) OnDomReady(ctx context.Context) {
 			if err != nil {
 				log.Err(err)
 			}
-			a.RefreshContactProfiles()
-			a.RefreshFeed("evFollowEventNote", true)
+			runtime.EventsEmit(a.ctx, "evPkChange", a.config.pubkey)
 		}
 	}
 
@@ -651,6 +650,7 @@ func (a *App) SetLoginWithPrivKey(keypin []string) error {
 		return err
 	}
 	a.config.Save()
+	runtime.EventsEmit(a.ctx, "evPkChange", a.config.pubkey)
 
 	if len(a.config.Relays) == 0 {
 		// Add some default relays
@@ -694,11 +694,7 @@ func (a *App) LoginWithPin(pin string) error {
 	}
 	a.config.privKeyHex = string(key)
 	a.config.pubkey, err = nostr.GetPublicKey(a.config.privKeyHex)
-
-	go func() {
-		a.RefreshContactProfiles()
-		a.RefreshFeed("evFollowEventNote", true)
-	}()
+	runtime.EventsEmit(a.ctx, "evPkChange", a.config.pubkey)
 
 	log.Info().Msgf("PIN login success for %s", a.config.pubkey)
 	return nil

@@ -1,8 +1,18 @@
 <script>
+    /**
+     *  A dialog for the creation of a new NOSTR account.
+     *  Just the basics are required here, dfurther details can be added in the profile dialog.
+     */
+
     import {GenerateKeys, SaveNewKeys } from "../wailsjs/go/main/App.js";
     import {EventsEmit} from "../wailsjs/runtime/runtime.js";
 
     let enableSave = true;
+
+    const onGenkeysDialog = () => {
+        document.getElementById('launchGenKeysDialog').click();
+    }
+    window.runtime.EventsOn('evGenkeysDialog', onGenkeysDialog);
 
     const showError = (msg) => {
         let d = document.getElementById("getKeysErrorMessage");
@@ -69,6 +79,7 @@
 </script>
 <style></style>
 
+<a id="launchGenKeysDialog" class="visually-hidden" data-bs-toggle="modal" data-bs-target="#getKeysDialog"></a>
 <div class="modal" id="getKeysDialog" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered modal-lg" >
         <div class="modal-content">

@@ -1,4 +1,8 @@
 <script>
+    /**
+     *  Called by EventPost to create clickable links for each p-tag in a note
+     */
+
     import {EventsEmit} from "../wailsjs/runtime/runtime.js";
 
     export let prof;

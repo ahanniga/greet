@@ -1,8 +1,15 @@
 <script>
+    /**
+     *  Help->About dialog
+     */
     import nostrIcon from "./assets/images/nostr.png";
     import {BrowserOpenURL} from "../wailsjs/runtime/runtime.js";
 </script>
-<style></style>
+<style>
+    .text-centered {
+       text-align: center;
+    }
+</style>
 
 <!-- Modal -->
 <div class="modal fade" id="aboutDialog" >
@@ -12,7 +19,7 @@
                 <h5 class="modal-title" id="exampleModalLabel">About Greet</h5>
                 <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body w-100" style="text-align: center;">
+            <div class="modal-body w-100 text-centered" >
                 <h4 class="">Greet Nostr Client</h4>
                 <img src={nostrIcon} alt="" height="28" class="m-lg-3">
                 <div class="">Version 0.2.0</div>

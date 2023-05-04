@@ -1,10 +1,16 @@
 <script>
+    /**
+     *  A small pop-up dialog where users can paste in a hex or npub and view a user profile.
+     *  From there that can view recent posts and follow.
+     */
+
     import { Nip19Decode, GetContactProfile } from "../wailsjs/go/main/App.js";
     import { EventsEmit } from "../wailsjs/runtime/runtime.js";
 
     let input;
 
     const onFindContactDialog = () => {
+        document.getElementById('launchFindContactDialog').click();
         input = "";
         setTimeout(() => {
             document.getElementById('searchContact').focus();
@@ -75,7 +81,7 @@
 </script>
 <style></style>
 
-<!-- Modal -->
+<a id="launchFindContactDialog" class="visually-hidden" data-bs-toggle="modal" data-bs-target="#findContactDialog"></a>
 <div class="modal fade" id="findContactDialog" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">

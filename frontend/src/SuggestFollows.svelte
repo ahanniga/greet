@@ -1,8 +1,14 @@
 <script>
+    /**
+     *  After creating a new account, some suggested follows
+     *  TODO: Lookup popular or trending profiles instead of hard-coded PK's
+     */
+
     import {GetContactProfile, FollowContact, RefreshFeedReset} from "../wailsjs/go/main/App.js";
 
     let follows = [ ]
     const onSuggestFollowsDialog = () => {
+        document.getElementById('launchSuggestFollowsDialog').click();
         follows = [
             // Some random, popular keys according to primal.net...
             "82341f882b6eabcd2ba7f1ef90aad961cf074af15b9ef44a09f9d2a8fbfbe6a2", // Jack
@@ -69,6 +75,7 @@
 </script>
 <style></style>
 
+<a id="launchSuggestFollowsDialog" class="visually-hidden" data-bs-toggle="modal" data-bs-target="#suggestFollowsDialog"></a>
 <div class="modal" id="suggestFollowsDialog" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered modal-lg" >
         <div class="modal-content">

@@ -1,18 +1,32 @@
 <script>
+    /**
+     *  A helper modal dialog for displaying error/info messages and getting confirmation.
+     */
+
     let title = "";
     let message = "";
     let cancelable = false;
     let okButton = "OK";
     let iconClass = "bi-info-circle"
+    let callback = false;
+
     const onMessageDialog = (opts) => {
         title = opts.title || "Message";
         message = opts.message || "";
         cancelable = opts.cancelable || false;
         okButton = opts.okButton || "OK";
         iconClass = opts.iconClass || "bi-info-circle";
+        callback = opts.callback || false;
+
         document.getElementById('launchMessageDialog').click();
     }
     window.runtime.EventsOn('evMessageDialog', onMessageDialog);
+
+    const confirmed = () => {
+        if(callback && typeof(callback) === "function" ) {
+            callback();
+        }
+    }
 
 </script>
 <style></style>
@@ -32,7 +46,7 @@
                 {#if cancelable}
                     <button id="boostClose" type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
                 {/if}
-                <button type="button" class="btn btn-primary btn-sm" data-bs-dismiss="modal">{okButton}</button>
+                <button type="button" class="btn btn-primary btn-sm" data-bs-dismiss="modal" on:click={confirmed}>{okButton}</button>
             </div>
         </div>
     </div>

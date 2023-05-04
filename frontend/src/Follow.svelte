@@ -1,4 +1,9 @@
 <script>
+    /**
+     *  A followed profile entry listed on the left of the app.
+     *  Each entry contains the profile picture, name and menu options to show profile details
+     */
+
     import LookupFollow from "./LookupFollow.svelte";
     import {EventsEmit} from "../wailsjs/runtime/runtime"
 

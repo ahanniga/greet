@@ -1,6 +1,19 @@
 <script>
+    /**
+     *  An individual note entry. Each contains the profile of the sender, a toolbar for various interactions boost/reply, etc,
+     *  clickable p-tagged profiles and expandable e-tags.
+     *
+     *  The note text is parsed for links, images and nostr: links.
+     */
+
     import {EventsEmit} from "../wailsjs/runtime/runtime.js";
-    import {GetTaggedProfiles, GetTaggedEvents, GetContactProfile, DeleteEvent} from "../wailsjs/go/main/App.js";
+    import {
+        GetTaggedProfiles,
+        GetTaggedEvents,
+        GetContactProfile,
+        DeleteEvent,
+        PostEvent
+    } from "../wailsjs/go/main/App.js";
     import { eventStore } from './store.js'
     import LookupPk from "./LookupPk.svelte";
     import LookupEvent from "./LookupEvent.svelte";
@@ -119,7 +132,18 @@
     }
 
     const confirmBoost = (ev, by) => {
-        EventsEmit("evBoostConfirmDialog", ev, by);
+        EventsEmit("evMessageDialog", {
+            title: "Confirm Boost",
+            message: "Bost this note from " + by + "?",
+            cancelable: true,
+            iconClass: "bi-question-circle",
+            callback: ()=>{
+                let tags = [];
+                tags.push(["e", event.id]);
+                tags.push(["p", event.pubkey]);
+                PostEvent(6, tags, "");
+            }
+        });
     }
 
     const openReplyDialog = (ev) => {
@@ -149,12 +173,6 @@
             <a href="#" data-bs-toggle="modal" data-bs-target="#replyDialog" data-bs-placement="bottom"  title="Reply" class="d-inline-block pe-2 nav-link" on:click={() => openReplyDialog(event)}>
                 <i class="mb-3 bi bi-reply"></i>
             </a>
-<!--                <a href="#" data-bs-container="#tooltip-container" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Delete" class="d-inline-block pe-2 nav-link ">-->
-<!--                    <i class="mb-3 bi bi-lightning"></i>-->
-<!--                </a>-->
-<!--                <a href="#" data-bs-toggle="modal" data-bs-placement="bottom" title="Like" class="d-inline-block pe-2 nav-link" on:click={() => { }}>-->
-<!--                    <i class="mb-3 bi bi-heart"></i>-->
-<!--                </a>-->
             <a href="#" data-bs-toggle="modal" data-bs-target="#confirmDialog" data-bs-placement="bottom" title="Boost" class="d-inline-block pe-2 nav-link" on:click={() => { confirmBoost(event, getDisplayName(p)) }}>
                 <i class="mb-3 bi bi-arrow-repeat"></i>
             </a>

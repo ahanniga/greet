@@ -1,4 +1,10 @@
 <script>
+    /**
+     *  Dialog to show details of a user profile.
+     *  If profile is of the current user, the fields are editable and
+     *  can be saved/published as metadata when saved.
+     */
+
     import {FollowContact, UnfollowContact, GetContactProfile, GetMyPubkey, SaveProfile} from "../wailsjs/go/main/App.js";
     import {EventsEmit} from "../wailsjs/runtime/runtime.js";
 
@@ -22,6 +28,7 @@
     let changed = false;
 
     const onProfileCard = (profile) => {
+        document.getElementById('launchProfileCardDialog').click();
         GetMyPubkey().then((p)=>{
             myPk = p;
             readonly = p !== profile.pk;
@@ -106,6 +113,7 @@
 
 <style></style>
 
+<a id="launchProfileCardDialog" class="visually-hidden" data-bs-toggle="modal" data-bs-target="#profileCard"></a>
 <div class="modal" id="profileCard" tabindex="-1" data-bs-backdrop="static" aria-labelledby="staticBackdropLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">

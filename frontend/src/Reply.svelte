@@ -1,4 +1,9 @@
 <script>
+    /**
+     *  A dialog called from an EventPost to allow the user to reply to a note.
+     *  Similar to the Post dialog, relays can be selected and new p-tags can be added
+     */
+
     import {
         GetWritableRelays,
         PublishContentToSelectedRelays,
@@ -72,10 +77,6 @@
             EventsEmit("evReloadSavedEvents");
         });
     }
-
-    // async function getNip19Decode(npub) {
-    //     return await Nip19Decode(npub);
-    // }
 
     const removeTagged = (pk) => {
         let tmpTags = [];

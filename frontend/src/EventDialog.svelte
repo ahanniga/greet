@@ -1,12 +1,17 @@
 <script>
+    /**
+     *  Display a note in a dialog.
+     *  TODO: Remove. Display inline with the parent event
+     */
+
     import {GetMyPubkey, GetTextNotesByEventIds, Nip19Decode} from "../wailsjs/go/main/App.js";
     import EventPost from "./EventPost.svelte";
-    import defaultEvent from './Util.svelte'
 
     let myPk;
-    let event = defaultEvent;
+    let event = false;
 
     const onEventDialog = (noteRef) => {
+        document.getElementById('launchEventDialog').click();
         event = false;
         GetMyPubkey().then((pk) => {
             myPk = pk;
@@ -35,6 +40,7 @@
 </script>
 <style></style>
 
+<a class="visually-hidden" id="launchEventDialog" data-bs-toggle="modal" data-bs-target="#eventDialog"></a>
 <div class="modal " id="eventDialog" tabindex="-1" data-bs-backdrop="static" aria-labelledby="staticBackdropLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content">

@@ -1,7 +1,13 @@
 <script>
+    /**
+     *  Gets a PIN from the user. The PIN is used to decrypt the private key in the config file (greet/config.json)
+     *  Called if the key is prefixed with "ENC:"
+     */
+
     import {LoginWithPin} from "../wailsjs/go/main/App.js";
 
     const onPinDialog = () => {
+        document.getElementById('launchPinDialog').click();
         setTimeout(() => {
             document.getElementById("pin").value = "";
             document.getElementById('pin').focus();
@@ -20,7 +26,6 @@
     const setPin = () => {
         let pin = document.getElementById("pin").value;
         LoginWithPin(pin).then((e) => {
-            console.log("LoginWithPin returns " + e);
             document.getElementById('pinDialogClose').click();
         }).catch((e) => {
             console.error(e);
@@ -41,6 +46,7 @@
 </script>
 <style></style>
 
+<a id="launchPinDialog" class="visually-hidden" data-bs-toggle="modal" data-bs-target="#pinDialog"></a>
 <div class="modal" id="pinDialog" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered " >
         <div class="modal-content">

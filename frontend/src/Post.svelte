@@ -1,4 +1,12 @@
 <script>
+    /**
+     *  A modal dialog to create a new note for publishing.
+     *  User can add p-tags by selecting existing, or add new
+     *  recipients not already followed.
+     *
+     *  User can also select which relays to broadcast the message.
+     */
+
     import {
         GetWritableRelays,
         Nip19Decode,

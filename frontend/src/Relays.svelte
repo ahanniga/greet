@@ -1,4 +1,11 @@
 <script>
+    /**
+     *  A dialog to configure relays.
+     *  Each can be enabled/disabled and set for read/write.
+     *  If set, the current relays are disconnected and new connections are established.
+     *  Relay config is written to the greet/config.json file.
+     */
+
 
     import {GetRelays, SetRelays} from "../wailsjs/go/main/App.js";
     let relays = [];
@@ -12,11 +19,9 @@
 
     const showError = (msg) => {
         let d = document.getElementById("relayErrorMessage");
-        // d.classList.remove("visually-hidden");
         d.innerText = msg;
         setTimeout(() => {
             d.innerText = "";
-            // d.classList.add("visually-hidden");
         }, 5000);
     }
     const showInfo = (msg) => {
@@ -87,10 +92,9 @@
             </div>
             <div class="modal-body">
 
-        <!--<form id="relayForm">-->
+        <form id="relayForm">
             <div class="row">
                 <div class="col">
-        <!--            <label class="form-label" for="relayForm">The following relays are used to get and post messages</label>-->
                     <table class="table ">
                         <tbody>
                         {#each relays as relay, i}
@@ -124,7 +128,7 @@
 
                 </div>
             </div>
-        <!--</form>-->
+        </form>
 
             </div>
             <div class="modal-footer">

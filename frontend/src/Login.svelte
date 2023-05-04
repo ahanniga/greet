@@ -1,6 +1,17 @@
 <script>
+    /**
+     *  A dialog to prompt a user for their key or create a new account
+     *  The backend looks for a config file. If not found or private key
+     *  not available then this login will be shown.
+     */
+
     import {Nip19Decode, SetLoginWithPrivKey} from "../wailsjs/go/main/App.js";
     import {EventsEmit} from "../wailsjs/runtime/runtime.js";
+
+    const onLoginDialog = () => {
+        document.getElementById('launchLoginDialog').click();
+    }
+    window.runtime.EventsOn('evLoginDialog', onLoginDialog);
 
     const showError = (msg) => {
         let d = document.getElementById("loginErrorMessage");
@@ -62,6 +73,7 @@
 </script>
 <style></style>
 
+<a id="launchLoginDialog" class="visually-hidden" data-bs-toggle="modal" data-bs-target="#loginDialog"></a>
 <div class="modal" id="loginDialog" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered modal-lg" >
         <div class="modal-content">
