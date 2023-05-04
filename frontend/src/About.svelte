@@ -15,7 +15,7 @@
             <div class="modal-body w-100" style="text-align: center;">
                 <h4 class="">Greet Nostr Client</h4>
                 <img src={nostrIcon} alt="" height="28" class="m-lg-3">
-                <div class="">Version 0.1.0</div>
+                <div class="">Version 0.2.0</div>
                 <div class=""><a on:click={()=>{BrowserOpenURL("https://github.com/ahanniga/greet")}} href="#">https://github.com/ahanniga/greet</a></div>
             </div>
             <div class="modal-footer">

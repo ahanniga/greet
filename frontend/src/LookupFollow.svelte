@@ -18,6 +18,6 @@
     }
 </style>
 
-<a href="#" data-bs-toggle="modal" data-bs-target="#profileInfo" style="text-transform: capitalize;" on:click={profileCard} >{ getDisplayName(profile) }</a>
+<a href="#" data-bs-toggle="modal" data-bs-target="#profileCard" style="text-transform: capitalize;" on:click={profileCard} >{ getDisplayName(profile) }</a>
 
 

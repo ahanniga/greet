@@ -106,11 +106,18 @@ func (a *App) OnDomReady(ctx context.Context) {
 	key := string(a.config.Privkey)
 	if key == "" {
 		log.Debug().Msg("...blank. Launch login")
-		go runtime.EventsEmit(a.ctx, "evLoginDialog")
+		go func() {
+			time.Sleep(time.Second * 2)
+			runtime.EventsEmit(a.ctx, "evLoginDialog")
+		}()
 	} else {
 		if strings.HasPrefix(key, "ENC:") {
 			log.Debug().Msg("...ENC:encrypted. Launch PIN dialog")
-			go runtime.EventsEmit(a.ctx, "evPinDialog")
+			go func() {
+				time.Sleep(time.Second * 2)
+				runtime.EventsEmit(a.ctx, "evPinDialog")
+			}()
+
 		} else {
 			log.Debug().Msg("...use configured")
 			a.config.privKeyHex = key
@@ -725,35 +732,21 @@ func (a *App) SaveNewKeys(creds map[string]string) error {
 		NIP05:       "",
 		DisplayName: displayName,
 		Lud06:       "",
+		Lud16:       "",
 		Banner:      "",
 		Website:     "",
 	}
 
-	content, err := json.Marshal(&meta)
+	return a.SaveProfile(meta)
+}
+
+func (a *App) SaveProfile(metadata ProfileMetadata) error {
+	log.Debug().Msg("Saving profile")
+	content, err := json.Marshal(metadata)
 	if err != nil {
 		log.Err(err)
 		return err
 	}
-
 	a.PostEvent(nostr.KindSetMetadata, nostr.Tags{}, string(content))
-
 	return nil
-}
-
-func chunkSlice(slice []string, chunkSize int) [][]string {
-	var chunks [][]string
-	for {
-		if len(slice) == 0 {
-			break
-		}
-
-		if len(slice) < chunkSize {
-			chunkSize = len(slice)
-		}
-
-		chunks = append(chunks, slice[0:chunkSize])
-		slice = slice[chunkSize:]
-	}
-
-	return chunks
 }

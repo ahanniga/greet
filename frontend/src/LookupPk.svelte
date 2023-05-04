@@ -15,7 +15,7 @@
     }
 </style>
 
-<a href="#" data-bs-toggle="modal" data-bs-target="#profileInfo" on:click={profileCard} >{prof.meta.nip05 || prof.pk}</a>&nbsp;
+<a href="#" data-bs-toggle="modal" data-bs-target="#profileCard" on:click={profileCard} >{prof.meta.nip05 || prof.pk}</a>&nbsp;
 
 
 

@@ -106,6 +106,10 @@ export function SaveNewKeys(arg1) {
   return window['go']['main']['App']['SaveNewKeys'](arg1);
 }
 
+export function SaveProfile(arg1) {
+  return window['go']['main']['App']['SaveProfile'](arg1);
+}
+
 export function SetLoginWithPrivKey(arg1) {
   return window['go']['main']['App']['SetLoginWithPrivKey'](arg1);
 }

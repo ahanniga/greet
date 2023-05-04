@@ -22,7 +22,7 @@
         if(!s) {
             return "";
         }
-        return s.replace(/(https?:\/\/\S+(?:jpe?g|png|bmp|gif))/g, '<div><img style="display: inline-block; text-align: left; width: auto; height: auto; max-width: 700px; max-height: 700px; margin: 5px 0; " src="$1" /></div>');
+        return s.replace(/(https?:\/\/\S+(?:jpe?g|png|bmp|gif|webp))/g, '<div><img style="display: inline-block; text-align: left; width: auto; height: auto; max-width: 700px; max-height: 700px; margin: 5px 0; " src="$1" /></div>');
     }
 
     const newlineParse = (s) => {
@@ -36,7 +36,7 @@
         if(!s) {
             return "";
         }
-        return s.replace(/https?:\/\/(?!\S+(?:jpe?g|png|bmp|gif))\S+/g, '<a href="#" onclick=runtime.BrowserOpenURL("$&") >$&</a>');
+        return s.replace(/https?:\/\/(?!\S+(?:jpe?g|png|bmp|gif|webp))\S+/g, '<a href="#" onclick=runtime.BrowserOpenURL("$&") >$&</a>');
     }
 
     const nostrEventLinkParse = (s) => {
@@ -49,7 +49,7 @@
         if(!s) {
             return "";
         }
-        return s.replace(/nostr:(npub\S[a-zA-Z0-9]+)/g, "<a href='#' data-bs-toggle=\"modal\" data-bs-target=\"#profileInfo\" onclick='runtime.EventsEmit(\"evProfileCardPk\", \"$1\");'> $& </a>");
+        return s.replace(/nostr:(npub\S[a-zA-Z0-9]+)/g, "<a href='#' data-bs-toggle=\"modal\" data-bs-target=\"#profileCard\" onclick='runtime.EventsEmit(\"evProfileCardPk\", \"$1\");'> $& </a>");
     }
 
     const profileCard = (profile) => {
@@ -140,7 +140,7 @@
         <span class="d-inline me-2 ms-3 float-end small text-body">{event.when}</span>
 
         <div id="tooltip-container" style="" class="float-end text-muted">
-            <a href="#" data-bs-toggle="modal" data-bs-target="#profileInfo" data-bs-placement="bottom" title="Contact Info" class="d-inline-block pe-2 nav-link" on:click={() => profileCard(p)}>
+            <a href="#" data-bs-toggle="modal" data-bs-target="#profileCard" data-bs-placement="bottom" title="Contact Info" class="d-inline-block pe-2 nav-link" on:click={() => profileCard(p)}>
                 <i class="mb-3 bi bi-person"></i>
             </a>
             <a href="#" data-bs-toggle="modal" data-bs-target="#eventInfo" data-bs-placement="bottom" title="Event Source" class="d-inline-block pe-2 nav-link"  on:click={eventInfo} >
@@ -180,16 +180,15 @@
             {#await GetTaggedProfiles(event.id)}
                 <img src="{loadingGif}" width="18" height="18">
             {:then profs}
-            {#each profs as prof}
-                <LookupPk {prof} />
-            {/each}
+                {#each profs as prof}
+                    <LookupPk {prof} />
+                {/each}
             {/await}
-
-            {#each event.tags as tag}
-                {#if tag[0] === "t"}
-                <span class="text-warning">#{tag[1]} </span>
-                {/if}
-            {/each}
+            <!--{#each event.tags as tag}-->
+            <!--    {#if tag[0] === "t"}-->
+            <!--    <span class="text-warning">#{tag[1]} </span>-->
+            <!--    {/if}-->
+            <!--{/each}-->
         </p>
 
         {#if event.kind === 1 }

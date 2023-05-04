@@ -12,6 +12,7 @@
         },
         display_name: "",
         lud06: "",
+        lud16: "",
         banner: "",
         website: "",
         npub: ""

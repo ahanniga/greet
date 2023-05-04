@@ -52,6 +52,11 @@
     }
     window.runtime.EventsOn('evSuggestFollowsDialog', onSuggestFollowsDialog);
 
+    const onProfileCardDialog = () => {
+        document.getElementById('launchProfileCardDialog').click();
+    }
+    window.runtime.EventsOn('evProfileCard', onProfileCardDialog);
+
 </script>
 
 
@@ -62,6 +67,7 @@
 <a id="launchEventDialog" data-bs-toggle="modal" data-bs-target="#eventDialog"></a>
 <a id="launchGenKeysDialog" data-bs-toggle="modal" data-bs-target="#getKeysDialog"></a>
 <a id="launchSuggestFollowsDialog" data-bs-toggle="modal" data-bs-target="#suggestFollowsDialog"></a>
+<a id="launchProfileCardDialog" data-bs-toggle="modal" data-bs-target="#profileCard"></a>
 <PinDialog />
 <Login />
 <FindContact />

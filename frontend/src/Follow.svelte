@@ -39,7 +39,7 @@
             <i class="bi bi-three-dots-vertical"></i>
         </a>
         <div class="dropdown-menu dropdown-menu-end">
-            <a href="#" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#profileInfo" on:click={profileCard} ><i class="bi bi-person me-2"></i>Profile</a>
+            <a href="#" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#profileCard" on:click={profileCard} ><i class="bi bi-person me-2"></i>Profile</a>
             <a href="#" class="dropdown-item" on:click={filter} ><i class="bi bi-filter me-1"></i>Recent Posts</a>
             <li>
                 <hr class="dropdown-divider">

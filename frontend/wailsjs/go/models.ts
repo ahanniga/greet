@@ -6,7 +6,8 @@ export namespace main {
 	    picture?: string;
 	    nip05?: string;
 	    display_name: string;
-	    lud06: string;
+	    lud06?: string;
+	    lud16?: string;
 	    banner: string;
 	    website: string;
 	
@@ -22,6 +23,7 @@ export namespace main {
 	        this.nip05 = source["nip05"];
 	        this.display_name = source["display_name"];
 	        this.lud06 = source["lud06"];
+	        this.lud16 = source["lud16"];
 	        this.banner = source["banner"];
 	        this.website = source["website"];
 	    }

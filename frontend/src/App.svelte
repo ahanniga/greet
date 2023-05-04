@@ -2,7 +2,15 @@
     import Follow from "./Follow.svelte";
     import EventPost from "./EventPost.svelte";
     import Footer from "./Footer.svelte";
-    import {Quit, GetMyPubkey, RefreshContactProfiles, GetTextNotesByPubkeysOptions, RefreshFeedReset, SaveConfigDark} from '../wailsjs/go/main/App.js'
+    import {
+        Quit,
+        GetMyPubkey,
+        RefreshContactProfiles,
+        GetTextNotesByPubkeysOptions,
+        RefreshFeedReset,
+        SaveConfigDark,
+        GetContactProfile
+    } from '../wailsjs/go/main/App.js'
     import { eventStore, contactStore } from './store.js'
     import nostrIcon from "./assets/images/nostr.png"
     import defaultProfile from "./Util.svelte"
@@ -19,6 +27,7 @@
     const onRefreshNote = (event) => {
         if(autoRefresh) {
             addOrUpdateEvent(event);
+            $eventStore = $eventStore;
         } else {
             pendingNotes.unshift(event);
             pendingNotes = pendingNotes;
@@ -28,6 +37,7 @@
 
     const onFollowEventNote = (event) => {
         addOrUpdateEvent(event);
+        $eventStore = $eventStore;
     }
     window.runtime.EventsOn('evFollowEventNote', onFollowEventNote);
 
@@ -39,7 +49,6 @@
         else {
             $eventStore.push(event);
         }
-        $eventStore = $eventStore;
     }
 
     const getDisplayName = (profile) => {
@@ -86,9 +95,10 @@
                 addOrUpdateEvent(pendingNotes[a]);
             }
             pendingNotes = [];
+            $eventStore = $eventStore;
         } else {
             // Force a full refresh
-            stopFilter();
+            resetFilterAndRefresh();
         }
     }
 
@@ -108,14 +118,19 @@
         window.runtime.EventsEmit("evFindContactDialog");
     }
 
-    onMount(() => {
-        GetMyPubkey().then((pk) => {
-            myPk = pk;
-        });
+    onMount(async () => {
+        const res = await GetMyPubkey();
+        myPk = await res;
     });
 
     const actionQuit = (e) => {
         Quit();
+    }
+
+    const myProfile = () => {
+        GetContactProfile(myPk).then((p)=>{
+            window.runtime.EventsEmit("evProfileCard", p);
+        });
     }
 
     const sortEvents = () => {
@@ -142,7 +157,7 @@
     }
     window.runtime.EventsOn('evFilterByProfile', onFilterByProfile);
 
-    const stopFilter = () => {
+    const resetFilterAndRefresh = () => {
         filtering = false;
         $eventStore = [];
         RefreshFeedReset("evFollowEventNote");
@@ -214,7 +229,7 @@
                     </a>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#relayDialog" on:click={relayDialog}><i class="bi bi-hdd-network me-2"/>Relays</a></li>
-                        <li><a class="dropdown-item" href="#" on:click={toggleMode}><i class="bi bi-person-badge me-2"/>Profile</a></li>
+                        <li><a class="dropdown-item" href="#" on:click={myProfile}><i class="bi bi-person-badge me-2"/>My Profile</a></li>
                         <li><a class="dropdown-item" href="#loginDialog" data-bs-toggle="modal"><i class="bi-box-arrow-in-right me-2"/>Login</a></li>
                         <li>
                             <hr class="dropdown-divider">
@@ -263,7 +278,7 @@
             <div class="col">
                 {#if filtering }
                 <h6 id="filter-banner" class="pb-2 mb-0">
-                    <a href="#" class="text-muted" title="Back" on:click={stopFilter}>
+                    <a href="#" class="text-muted" title="Back" on:click={resetFilterAndRefresh}>
                         <i class="bi bi-caret-left-fill me-1"></i>
                     </a><span class="text-primary-emphasis"> { getDisplayName(filterProfile) } </span>
                 </h6>
