@@ -22,6 +22,7 @@ type App struct {
 	ctx       context.Context
 	relayPool *RelayPool
 	config    *Config
+	logging   zerolog.Level
 }
 
 var (
@@ -67,7 +68,7 @@ func (a *App) startup(ctx context.Context) {
 }
 
 func setupLogging() {
-	zerolog.SetGlobalLevel(zerolog.TraceLevel)
+	zerolog.SetGlobalLevel(app.logging)
 	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
 	output.FormatLevel = func(i interface{}) string {
 		return strings.ToUpper(fmt.Sprintf("| %-6s|", i))
