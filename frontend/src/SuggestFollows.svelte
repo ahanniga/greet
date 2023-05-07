@@ -65,7 +65,7 @@
         }
 
         FollowContact(tmp).then(()=>{
-            RefreshFeedReset("evFollowEventNote");
+            RefreshFeedReset();
             document.getElementById("suggestFollowsClose").click();
         }).catch((msg)=>{
             showError(msg);

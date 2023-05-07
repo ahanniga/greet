@@ -11,16 +11,18 @@
         Quit,
         GetMyPubkey,
         RefreshContactProfiles,
-        GetTextNotesByPubkeysOptions,
+        GetTextNotesForPubkeys,
         RefreshFeedReset,
         SaveConfigDark,
         GetContactProfile,
         SaveContacts,
-        RestoreContacts
+        RestoreContacts,
+        BeginSubscriptions
     } from '../wailsjs/go/main/App.js'
-    import { eventStore, contactStore } from './store.js'
-    import nostrIcon from "./assets/images/nostr.png"
-    import loadingGif from "./assets/images/loading.gif"
+    import { contactStore } from './ContactStore.js'
+    import { eventStore, sortedEvents  } from "./EventStore.js";
+    import nostrIcon from "./assets/images/nostr.png";
+    import loadingGif from "./assets/images/loading.gif";
     import Dialogs from "./Dialogs.svelte";
     import {EventsEmit} from "../wailsjs/runtime/runtime.js";
 
@@ -36,9 +38,7 @@
         myPk = pk;
         GetContactProfile(pk).then((p)=>{
             myProfile = p;
-            onRefreshContacts().then(()=>{
-                resetFilterAndRefresh();
-            });
+            BeginSubscriptions();
         });
     }
     window.runtime.EventsOn('evPkChange', onPkChange);
@@ -46,7 +46,6 @@
     const onRefreshNote = (event) => {
         if(autoRefresh) {
             addOrUpdateEvent(event);
-            $eventStore = $eventStore;
         } else {
             pendingNotes.unshift(event);
             pendingNotes = pendingNotes;
@@ -56,33 +55,34 @@
 
     const onFollowEventNote = (event) => {
         addOrUpdateEvent(event);
-        $eventStore = $eventStore;
     }
     window.runtime.EventsOn('evFollowEventNote', onFollowEventNote);
 
     const addOrUpdateEvent = (event) => {
-        let c = getEventIndex(event);
-        if(c >= 0) {
-            $eventStore[c] = event;
+        let ev = getEventIndex(event);
+        if(ev >= 0) {
+            eventStore.updateEvent(ev.id, event)
+        } else {
+            eventStore.addEvent(event);
         }
-        else {
-            $eventStore.push(event);
+    }
+
+    const getEventIndex = (event) => {
+        for(let a = 0; a < $sortedEvents.length; a++) {
+            let c = $sortedEvents[a];
+            if(c.id === event.id) {
+                console.log("Got event index " + a);
+                return a;
+            }
         }
+        console.log("Got event index -1");
+        return -1
     }
 
     const getDisplayName = (profile) => {
         return profile.meta.display_name || profile.meta.name || profile.meta.nip05 || profile.pk || "";
     }
 
-    const getEventIndex = (event) => {
-        for(let a = 0; a < $eventStore.length; a++) {
-            let c = $eventStore[a];
-            if(c.id === event.id) {
-                return a;
-            }
-        }
-        return -1
-    }
     const getContactProfileIndex = (profile) => {
         for(let a = 0; a < $contactStore.length; a++) {
             let c = $contactStore[a];
@@ -104,26 +104,25 @@
         else {
             $contactStore.push(profile);
         }
-        $contactStore = $contactStore;
     }
     window.runtime.EventsOn('evMetadata', onMetadata);
 
     const refreshFeed = () => {
-        if(pendingNotes.length > 0) {
+        if(pendingNotes.length > 0 && !filtering) {
             for(let a = 0; a < pendingNotes.length; a++) {
                 addOrUpdateEvent(pendingNotes[a]);
             }
             pendingNotes = [];
-            $eventStore = $eventStore;
         } else {
             // Force a full refresh
+            console.log("resetFilterAndRefresh...");
             resetFilterAndRefresh();
         }
     }
 
     const onRefreshContacts = () => {
         $contactStore = [];
-        return RefreshContactProfiles();
+        RefreshContactProfiles();
     }
     window.runtime.EventsOn('evRefreshContacts', onRefreshContacts);
 
@@ -149,12 +148,6 @@
         });
     }
 
-    const sortEvents = () => {
-        return $eventStore.sort((a, b) => {
-            return a.created_at < b.created_at;
-        });
-    }
-
     const sortContacts = () => {
         return $contactStore.sort((a, b) => {
             return getDisplayName(b).trim().toLowerCase() < getDisplayName(a).trim().toLowerCase();
@@ -168,15 +161,16 @@
         filtering = true;
         filterProfile = profile;
 
-        $eventStore = [];
-        GetTextNotesByPubkeysOptions([profile.pk], [1,6], since, 100, "evFollowEventNote");
+        eventStore.deleteAll();
+        GetTextNotesForPubkeys([profile.pk], "evFollowEventNote", true);
     }
     window.runtime.EventsOn('evFilterByProfile', onFilterByProfile);
 
     const resetFilterAndRefresh = () => {
         filtering = false;
-        $eventStore = [];
-        RefreshFeedReset("evFollowEventNote");
+        pendingNotes = [];
+        eventStore.deleteAll();
+        RefreshFeedReset();
     }
 
     const toggleMode = () => {
@@ -314,7 +308,7 @@
                 <li class="nav-item "><button class="btn btn-outline-warning me-3" data-bs-toggle="modal" data-bs-target="#postDialog" on:click={launchPostDialog} >Post</button></li>
                 <li class="nav-item "><button class="btn btn-outline-success me-3" on:click={refreshFeed}>Refresh
                     {#if pendingCount > 0}
-                    <span class="badge bg-success">{pendingCount}</span>
+                    <span class="badge bg-success ms-2">{pendingCount}</span>
                     {/if}
                 </button></li>
             </ul>
@@ -350,10 +344,10 @@
             </div>
             <div class='col mh-100 me-2 overflow-auto'>
                 <div class='row flex-grow-1 pe-2'>
-                    {#if $eventStore.length === 0 && myPk}
+                    {#if $sortedEvents.length === 0 && myPk}
                         <img src="{loadingGif}" style="width: 50px !important;">
                     {:else}
-                        {#each sortEvents($eventStore) as event}
+                        {#each $sortedEvents as event}
                             {#if event.kind === 1 || event.kind === 6 }
                                 <EventPost {event} {myPk} />
                             {/if}
@@ -363,7 +357,6 @@
             </div>
         </div>
         <div class="row flex-shrink-0 ">
-<!--            <Footer/>-->
         </div>
     </div>
 </main>

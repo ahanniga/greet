@@ -67,14 +67,14 @@ export namespace main {
 		}
 	}
 	
-	export class Relay {
+	export class RelayStruct {
 	    url: string;
 	    read: boolean;
 	    write: boolean;
 	    enabled: boolean;
 	
 	    static createFrom(source: any = {}) {
-	        return new Relay(source);
+	        return new RelayStruct(source);
 	    }
 	
 	    constructor(source: any = {}) {

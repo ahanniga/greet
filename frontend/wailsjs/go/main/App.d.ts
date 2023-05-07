@@ -3,6 +3,8 @@
 import {nostr} from '../models';
 import {main} from '../models';
 
+export function BeginSubscriptions():Promise<void>;
+
 export function DeleteEvent(arg1:string):Promise<void>;
 
 export function DumpEvents():Promise<void>;
@@ -27,9 +29,7 @@ export function GetTaggedProfiles(arg1:string):Promise<Array<any>>;
 
 export function GetTextNotesByEventIds(arg1:Array<string>):Promise<Array<any>>;
 
-export function GetTextNotesByPubkeys(arg1:Array<string>,arg2:string,arg3:boolean):Promise<void>;
-
-export function GetTextNotesByPubkeysOptions(arg1:Array<string>,arg2:Array<number>,arg3:any,arg4:number,arg5:string,arg6:boolean):Promise<void>;
+export function GetTextNotesForPubkeys(arg1:Array<string>,arg2:string,arg3:boolean):Promise<void>;
 
 export function GetWritableRelays():Promise<Array<any>>;
 
@@ -47,9 +47,9 @@ export function Quit():Promise<void>;
 
 export function RefreshContactProfiles():Promise<void>;
 
-export function RefreshFeed(arg1:string,arg2:boolean):Promise<void>;
+export function RefreshFeed(arg1:boolean):Promise<void>;
 
-export function RefreshFeedReset(arg1:string):Promise<void>;
+export function RefreshFeedReset():Promise<void>;
 
 export function RestoreContacts():Promise<any>;
 
@@ -65,6 +65,6 @@ export function SetLoginWithPrivKey(arg1:Array<string>):Promise<void>;
 
 export function SetRelays(arg1:Array<any>):Promise<void>;
 
-export function StartPolling():Promise<void>;
+export function SubscribeToFeedForPubkeys(arg1:Array<string>,arg2:boolean):Promise<void>;
 
 export function UnfollowContact(arg1:string):Promise<void>;

@@ -19,10 +19,9 @@ import (
 )
 
 type App struct {
-	ctx         context.Context
-	relayPool   *RelayPool
-	lastRefresh *nostr.Timestamp
-	config      *Config
+	ctx       context.Context
+	relayPool *RelayPool
+	config    *Config
 }
 
 var (
@@ -35,6 +34,9 @@ var (
 const (
 	QUERY_SIZE   = 25
 	POLL_SECONDS = 60
+	SECS_6H      = 21600
+	SECS_12H     = 43200
+	SECS_24H     = 86400
 )
 
 func NewApp() *App {
@@ -42,36 +44,30 @@ func NewApp() *App {
 }
 
 func (a *App) startup(ctx context.Context) {
-
-	log.Info().Msg("Starting")
 	a.ctx = ctx
+	setupLogging()
 
-	t := nostr.Now() - 43200 // 12h
-	a.lastRefresh = &t
-	db = NewDB()
-
+	log.Info().Msg("Starting up...")
 	a.config = NewConfig()
 	err := a.config.Load()
 	if err != nil {
 		log.Error().Msg("Error: Could not configuration file: " + err.Error())
 	}
-
-	setupLogging()
-
+	db = NewDB()
 	a.relayPool = NewRelayPool()
 	for _, r := range a.config.Relays {
 		if r.Enabled {
-			err := a.relayPool.Add(r)
+			err = a.relayPool.Add(r)
 			if err != nil {
 				log.Err(err)
 			}
 		}
 	}
-
+	log.Info().Msg("...start up done")
 }
 
 func setupLogging() {
-	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	zerolog.SetGlobalLevel(zerolog.TraceLevel)
 	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
 	output.FormatLevel = func(i interface{}) string {
 		return strings.ToUpper(fmt.Sprintf("| %-6s|", i))
@@ -106,76 +102,66 @@ func (a *App) OnDomReady(ctx context.Context) {
 	log.Debug().Msg("Checking private key...")
 	key := string(a.config.Privkey)
 	if key == "" {
-		log.Debug().Msg("...blank. Launch login")
+		log.Debug().Msg("...key blank. Launch login")
 		go func() {
 			time.Sleep(time.Second * 2)
 			runtime.EventsEmit(a.ctx, "evLoginDialog")
 		}()
 	} else {
 		if strings.HasPrefix(key, "ENC:") {
-			log.Debug().Msg("...ENC:encrypted. Launch PIN dialog")
+			log.Debug().Msg("...key ENC:encrypted. Launch PIN dialog")
 			go func() {
 				time.Sleep(time.Second * 2)
 				runtime.EventsEmit(a.ctx, "evPinDialog")
 			}()
-
 		} else {
-			log.Debug().Msg("...use configured")
+			log.Debug().Msg("...use configured key")
 			a.config.privKeyHex = key
 			a.config.pubkey, err = nostr.GetPublicKey(key)
 			if err != nil {
-				log.Err(err)
+				log.Panic()
 			}
-			runtime.EventsEmit(a.ctx, "evPkChange", a.config.pubkey)
+			go func() {
+				time.Sleep(time.Second * 2)
+				runtime.EventsEmit(a.ctx, "evPkChange", a.config.pubkey)
+			}()
 		}
 	}
+}
 
-	a.StartPolling()
+func (a *App) BeginSubscriptions() {
+	a.RefreshContactProfiles()
+	a.SubscribeToFeedForPubkeys(followedPks, true)
 }
 
 func (A *App) DumpEvents() {
 	db.DumpEvents()
 }
 
-func (a *App) StartPolling() {
-	log.Debug().Msgf("Starting polling every %d seconds", POLL_SECONDS)
-
-	// Check for new notes
-	go func() {
-		loops := 0
-		for true {
-			time.Sleep(time.Second * POLL_SECONDS)
-			a.RefreshFeed("evRefreshNote", false)
-			if loops >= 15 {
-				a.relayPool.ReconnectAll()
-				loops = 0
-			}
-
-			loops++
-		}
-	}()
-}
-
 func (a *App) RefreshContactProfiles() {
 	log.Debug().Msg("Refreshing Contact Profiles")
 	followedPks = a.GetContactList(a.config.pubkey)
-	a.GetMetadataEvents(followedPks)
+
+	chks := chunkSlice(followedPks, QUERY_SIZE)
+	for _, chk := range chks {
+		a.GetMetadataEvents(chk)
+	}
 }
 
-func (a *App) RefreshFeed(postEvent string, repost bool) {
+func (a *App) RefreshFeed(repost bool) {
 	if len(followedPks) == 0 {
 		return
 	}
 	chks := chunkSlice(followedPks, QUERY_SIZE)
 	for _, chk := range chks {
-		a.GetTextNotesByPubkeys(chk, postEvent, repost)
+		a.SubscribeToFeedForPubkeys(chk, repost)
 	}
 }
 
-func (a *App) RefreshFeedReset(postEvent string) {
-	t := nostr.Now() - 21600 // 6h
-	a.lastRefresh = &t
-	a.RefreshFeed(postEvent, true)
+func (a *App) RefreshFeedReset() {
+	log.Debug().Msg("Resetting feed")
+	a.relayPool.UnsubscribeAll()
+	a.RefreshFeed(true)
 }
 
 func (a *App) PkToNpub(pk string) (string, error) {
@@ -194,41 +180,30 @@ func (a *App) Nip19Decode(uri string) (string, error) {
 }
 
 func (a *App) GetContactList(pk string) []string {
-	log.Debug().Msg("Getting contact list")
+	log.Debug().Msgf("Getting contact list for %s", pk)
+
 	pks := []string{}
 	if pk == "" {
 		return pks
 	}
 
-	evs := make(chan *nostr.Event)
-	defer close(evs)
-	pending := a.relayPool.Query(&nostr.Filter{
+	ch := make(chan *nostr.Event)
+	go func() {
+		for ev := range ch {
+			tags := ev.Tags.GetAll([]string{"p"})
+			for a := 0; a < len(tags); a++ {
+				if !contains(pks, tags[a].Value()) {
+					pks = append(pks, tags[a].Value())
+				}
+			}
+		}
+	}()
+	a.relayPool.QuerySync(&nostr.Filter{
 		Authors: []string{pk},
 		Kinds: []int{
 			nostr.KindContactList,
 		},
-	}, evs)
-
-	for ev := range evs {
-		if ev == nil {
-			pending--
-			if pending == 0 {
-				break
-			}
-			continue
-		}
-
-		fmt.Println("GetContactList: looking at event", ev.ID)
-		tags := ev.Tags.GetAll([]string{"p"})
-
-		fmt.Println("GetContactList: pTag count", len(tags))
-		// TODO: Change this to track the relays the contact is known at
-		for a := 0; a < len(tags); a++ {
-			if !contains(pks, tags[a].Value()) {
-				pks = append(pks, tags[a].Value())
-			}
-		}
-	}
+	}, ch)
 
 	return pks
 }
@@ -240,59 +215,46 @@ func (a *App) GetMetadataEvents(pks []string) {
 	}
 	log.Debug().Msgf("Getting metadata events for %d keys: %s", len(pks), pks)
 
-	for i := range pks {
-		if pks[i] == "" {
-			log.Error().Msg("Caught empty PK") // FIXME: why does this happen?
-			return
-		}
-	}
+	ch := make(chan *nostr.Event)
+	go func() {
+		for ev := range ch {
+			db.AddEvent(ev.ID, ev)
+			cm, err := getContentMeta(ev)
+			if err != nil {
+				fmt.Errorf("Error parsing metadata for event", ev.ID, ":", err.Error())
+				continue
+			}
+			npub, err := a.PkToNpub(ev.PubKey)
+			if err != nil {
+				fmt.Errorf("Error converting PK to NPUB for event", ev.ID, ":", err.Error())
+				continue
+			}
 
-	evs := make(chan *nostr.Event)
-	pending := a.relayPool.Query(&nostr.Filter{
+			profile := Profile{
+				Pk:        ev.PubKey,
+				Following: contains(followedPks, ev.PubKey),
+				Meta:      *cm,
+				Npub:      npub,
+			}
+
+			db.AddProfile(ev.PubKey, &profile) // Overwrite if existing
+
+			if profile.Following {
+				go runtime.EventsEmit(app.ctx, "evMetadata", profile)
+			}
+		}
+	}()
+
+	a.relayPool.QuerySync(&nostr.Filter{
 		Authors: pks,
 		Kinds: []int{
 			nostr.KindSetMetadata,
 		},
 		Limit: len(pks),
-	}, evs)
-
-	for ev := range evs {
-		if ev == nil {
-			pending--
-			if pending == 0 {
-				break
-			}
-			continue
-		}
-		db.AddEvent(ev.ID, ev)
-		cm, err := getContentMeta(ev)
-		if err != nil {
-			fmt.Errorf("Error parsing metadata for event", ev.ID, ":", err.Error())
-			continue
-		}
-		npub, err := a.PkToNpub(ev.PubKey)
-		if err != nil {
-			fmt.Errorf("Error converting PK to NPUB for event", ev.ID, ":", err.Error())
-			continue
-		}
-
-		profile := Profile{
-			Pk:        ev.PubKey,
-			Following: contains(followedPks, ev.PubKey),
-			Meta:      *cm,
-			Npub:      npub,
-		}
-
-		db.AddProfile(ev.PubKey, &profile) // Overwrite if existing
-
-		if profile.Following {
-			go runtime.EventsEmit(app.ctx, "evMetadata", profile)
-		}
-	}
+	}, ch)
 }
 
 func (a *App) GetTaggedProfiles(parentEvent string) []*Profile {
-	log.Debug().Msgf("GetTaggedProfiles called for parent event %s", parentEvent)
 	cachedProfiles := []*Profile{}
 	missingProfiles := []string{}
 	dups := []string{}
@@ -323,6 +285,8 @@ func (a *App) GetTaggedProfiles(parentEvent string) []*Profile {
 				}
 			}
 		}
+	} else {
+		log.Debug().Msgf("GetTaggedProfiles called for parent event %s (not cached)", parentEvent)
 	}
 
 	return cachedProfiles
@@ -365,10 +329,10 @@ func (a *App) GetContactProfile(pk string) *Profile {
 		pk, _ = a.Nip19Decode(pk)
 	}
 	if db.HasProfile(pk) {
-		log.Debug().Msgf("GetContactProfile for PK %s (cache)", pk)
+		log.Trace().Msgf("GetContactProfile for PK %s (cache)", pk)
 		return db.GetProfile(pk)
 	}
-	log.Debug().Msgf("GetContactProfile for PK %s (query)", pk)
+	log.Trace().Msgf("GetContactProfile for PK %s (query)", pk)
 	a.GetMetadataEvents([]string{pk})
 	if db.HasProfile(pk) {
 		return db.GetProfile(pk)
@@ -393,11 +357,11 @@ func (a *App) GetWritableRelays() []*string {
 	return rs
 }
 
-func (a *App) GetRelays() []*Relay {
+func (a *App) GetRelays() []*RelayStruct {
 	return a.config.Relays
 }
 
-func (a *App) SetRelays(r []*Relay) {
+func (a *App) SetRelays(r []*RelayStruct) {
 	a.relayPool.DisconnectAll()
 	a.relayPool.RemoveAll()
 
@@ -411,50 +375,74 @@ func (a *App) SetRelays(r []*Relay) {
 	}
 
 	a.RefreshContactProfiles()
-	go a.RefreshFeed("evFollowEventNote", true)
+	go a.RefreshFeed(false)
 }
 
-func (a *App) GetTextNotesByPubkeys(pks []string, postEvent string, repost bool) {
-	log.Debug().Msgf("Getting text events from contact pks...%d", len(pks))
-	a.GetTextNotesByPubkeysOptions(pks, []int{nostr.KindTextNote, nostr.KindBoost}, a.lastRefresh, 0, postEvent, repost)
-	t := nostr.Now()
-	a.lastRefresh = &t
-}
+func (a *App) GetTextNotesForPubkeys(pks []string, postEvent string, repost bool) error {
+	log.Debug().Msgf("Getting text events for pks...(%d)", len(pks))
 
-func (a *App) GetTextNotesByPubkeysOptions(pks []string, kinds []int, since *nostr.Timestamp, limit int, postEvent string, repost bool) {
 	if len(pks) == 0 {
-		return
+		return nil
 	}
 
-	evs := make(chan *nostr.Event)
-	filter := nostr.Filter{
-		Authors: pks,
-		Kinds:   kinds,
-		Since:   since,
-	}
-	if limit > 0 {
-		filter.Limit = limit
-	}
-
-	pending := a.relayPool.Query(&filter, evs)
-
-	for ev := range evs {
-		if ev == nil {
-			pending--
-			if pending == 0 {
-				break
-			}
-			continue
-		}
-		ev.SetExtra("when", humanize.Time(ev.CreatedAt.Time()))
-		existingEvent := db.GetEvent(ev.ID)
-		db.AddEvent(ev.ID, ev)
-		if existingEvent == nil || repost {
-			if postEvent != "" {
+	ch := make(chan *nostr.Event)
+	go func() {
+		for ev := range ch {
+			ev.SetExtra("when", humanize.Time(ev.CreatedAt.Time()))
+			existingEvent := db.GetEvent(ev.ID)
+			db.AddEvent(ev.ID, ev)
+			if existingEvent == nil || repost {
 				runtime.EventsEmit(app.ctx, postEvent, ev)
 			}
 		}
+	}()
+
+	a.relayPool.QuerySync(&nostr.Filter{
+		Authors: pks,
+		Kinds:   []int{nostr.KindTextNote, nostr.KindBoost},
+		Limit:   100,
+	}, ch)
+
+	return nil
+}
+
+func (a *App) SubscribeToFeedForPubkeys(pks []string, repost bool) {
+	if len(pks) == 0 {
+		return
 	}
+	ch := make(chan *nostr.Event)
+	ch1 := make(chan *nostr.Event)
+	go func() {
+		for ev := range ch {
+			ev.SetExtra("when", humanize.Time(ev.CreatedAt.Time()))
+			existingEvent := db.GetEvent(ev.ID)
+			db.AddEvent(ev.ID, ev)
+			if existingEvent == nil || repost {
+				runtime.EventsEmit(app.ctx, "evFollowEventNote", ev)
+			}
+		}
+	}()
+	go func() {
+		for ev := range ch1 {
+			ev.SetExtra("when", humanize.Time(ev.CreatedAt.Time()))
+			existingEvent := db.GetEvent(ev.ID)
+			db.AddEvent(ev.ID, ev)
+			if existingEvent == nil || repost {
+				runtime.EventsEmit(app.ctx, "evRefreshNote", ev)
+			}
+		}
+	}()
+	since := nostr.Now() - SECS_6H
+	filter := nostr.Filter{
+		Authors: pks,
+		Kinds: []int{
+			nostr.KindTextNote,
+			nostr.KindBoost,
+		},
+		Since: &since,
+	}
+
+	a.relayPool.Subscribe(&filter, ch, ch1)
 }
 
 func (a *App) GetTextNotesByEventIds(ids []string) []*nostr.Event {
@@ -464,26 +452,21 @@ func (a *App) GetTextNotesByEventIds(ids []string) []*nostr.Event {
 		return events
 	}
 
-	evs := make(chan *nostr.Event)
-	pending := a.relayPool.Query(&nostr.Filter{
+	ch := make(chan *nostr.Event)
+	go func() {
+		for ev := range ch {
+			ev.SetExtra("when", humanize.Time(ev.CreatedAt.Time()))
+			db.AddEvent(ev.ID, ev)
+			events = append(events, ev)
+		}
+	}()
+	a.relayPool.QuerySync(&nostr.Filter{
 		IDs: ids,
 		Kinds: []int{
 			nostr.KindTextNote,
+			nostr.KindBoost,
 		},
-	}, evs)
-
-	for ev := range evs {
-		if ev == nil {
-			pending--
-			if pending == 0 {
-				break
-			}
-			continue
-		}
-		ev.SetExtra("when", humanize.Time(ev.CreatedAt.Time()))
-		db.AddEvent(ev.ID, ev)
-		events = append(events, ev)
-	}
+	}, ch)
 
 	log.Debug().Msgf("GetTextNotesByEventIds returning %d events", len(events))
 	return events
@@ -501,7 +484,7 @@ func (a *App) PostEvent(kind int, tags nostr.Tags, content string) {
 
 	for _, r := range a.relayPool.pool {
 		if r.Enabled && r.Write {
-			r.conn.Publish(r.rootCtx, ev)
+			r.conn.Publish(context.Background(), ev)
 			log.Info().Msgf("Published %s to relay %s", ev.ID, r.Url)
 		}
 	}
@@ -530,7 +513,7 @@ func (a *App) PublishContentToSelectedRelays(kind int, content string, ts [][]st
 	for _, url := range relays {
 		r := a.relayPool.GetRelayByUrl(url)
 		if r.Enabled && r.Write {
-			r.conn.Publish(r.rootCtx, ev)
+			r.conn.Publish(context.Background(), ev)
 			log.Info().Msgf("Published %s to %s", ev.ID, r.Url)
 		}
 	}
@@ -598,7 +581,7 @@ func (a *App) DeleteEvent(evId string) {
 
 	for _, r := range a.relayPool.pool {
 		if r.Enabled && r.Write {
-			r.conn.Publish(r.rootCtx, ev)
+			r.conn.Publish(context.Background(), ev)
 		}
 		log.Info().Msgf("Delete %s requested to %s", ev.ID, r.Url)
 	}
@@ -654,7 +637,7 @@ func (a *App) SetLoginWithPrivKey(keypin []string) error {
 
 	if len(a.config.Relays) == 0 {
 		// Add some default relays
-		relays := []*Relay{}
+		relays := []*RelayStruct{}
 		addrs := []string{
 			"wss://nos.lol",
 			"wss://relay.damus.io",
@@ -663,7 +646,7 @@ func (a *App) SetLoginWithPrivKey(keypin []string) error {
 		}
 
 		for _, addr := range addrs {
-			relays = append(relays, &Relay{
+			relays = append(relays, &RelayStruct{
 				Url:     addr,
 				Read:    true,
 				Write:   true,

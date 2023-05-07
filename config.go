@@ -12,7 +12,7 @@ type Config struct {
 	Privkey       string
 	privKeyHex    string
 	pin           string
-	Relays        []*Relay
+	Relays        []*RelayStruct
 	follows       []*string
 	Dark          bool
 	userConfigDir string
@@ -34,7 +34,7 @@ func NewConfig() *Config {
 		Privkey:       "",
 		privKeyHex:    "",
 		pin:           "",
-		Relays:        []*Relay{},
+		Relays:        []*RelayStruct{},
 		follows:       []*string{},
 		Dark:          true,
 		userConfigDir: userConfigDir,

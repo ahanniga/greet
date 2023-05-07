@@ -14,7 +14,7 @@
         DeleteEvent,
         PostEvent
     } from "../wailsjs/go/main/App.js";
-    import { eventStore } from './store.js'
+    import {eventStore} from "./EventStore";
     import LookupPk from "./LookupPk.svelte";
     import LookupEvent from "./LookupEvent.svelte";
     import loadingGif from "./assets/images/loading.gif"
@@ -74,7 +74,7 @@
     }
 
     const eventDelete = () => {
-        $eventStore = $eventStore.filter(ev => ev.id !== event.id);
+        eventStore.deleteEvent(event.id)
         DeleteEvent(event.id);
     }
 
