@@ -5,6 +5,8 @@ import {main} from '../models';
 
 export function BeginSubscriptions():Promise<void>;
 
+export function CheckRelays():Promise<void>;
+
 export function DeleteEvent(arg1:string):Promise<void>;
 
 export function DumpEvents():Promise<void>;
@@ -21,6 +23,8 @@ export function GetMetadataEvents(arg1:Array<string>):Promise<void>;
 
 export function GetMyPubkey():Promise<string>;
 
+export function GetReadableRelays():Promise<Array<any>>;
+
 export function GetRelays():Promise<Array<any>>;
 
 export function GetTaggedEvents(arg1:string):Promise<Array<any>>;
@@ -36,6 +40,8 @@ export function GetWritableRelays():Promise<Array<any>>;
 export function LoginWithPin(arg1:string):Promise<void>;
 
 export function Nip19Decode(arg1:string):Promise<string>;
+
+export function PingTimer():Promise<void>;
 
 export function PkToNpub(arg1:string):Promise<string>;
 

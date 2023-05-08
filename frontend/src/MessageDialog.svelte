@@ -2,6 +2,7 @@
     /**
      *  A helper modal dialog for displaying error/info messages and getting confirmation.
      */
+    import {EventsOn} from "../wailsjs/runtime/runtime.js";
 
     let title = "";
     let message = "";
@@ -20,7 +21,7 @@
 
         document.getElementById('launchMessageDialog').click();
     }
-    window.runtime.EventsOn('evMessageDialog', onMessageDialog);
+    EventsOn('evMessageDialog', onMessageDialog);
 
     const confirmed = () => {
         if(callback && typeof(callback) === "function" ) {

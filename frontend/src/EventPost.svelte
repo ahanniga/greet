@@ -6,7 +6,7 @@
      *  The note text is parsed for links, images and nostr: links.
      */
 
-    import {EventsEmit} from "../wailsjs/runtime/runtime.js";
+    import {EventsEmit, EventsOn} from "../wailsjs/runtime/runtime.js";
     import {
         GetTaggedProfiles,
         GetTaggedEvents,
@@ -18,6 +18,7 @@
     import LookupPk from "./LookupPk.svelte";
     import LookupEvent from "./LookupEvent.svelte";
     import loadingGif from "./assets/images/loading.gif"
+    import humanizeDuration from "humanize-duration"
 
     export let event;
 
@@ -26,6 +27,16 @@
     let taggedEvents = [];
     let showWaiting = false;
     let notFound = false;
+
+    const getWhen = (millis) => {
+        return humanizeDuration(Math.floor(millis - event.created_at*1000), { round: true, units: ["y", "mo", "d", "h", "m"] });
+    }
+    let when = getWhen(Date.now());
+
+    const updateWhen = (now) => {
+        when =  getWhen(now)
+    }
+    EventsOn("evTimer", updateWhen);
 
     const parseContent = (txt) => {
         return imageParse(newlineParse(httpLinkParse(nostrNpubLinkParse(nostrEventLinkParse(txt)))));
@@ -147,7 +158,7 @@
     }
 
     const openReplyDialog = (ev) => {
-        window.runtime.EventsEmit("evReplyDialog", ev);
+        EventsEmit("evReplyDialog", ev);
     }
 
 </script>
@@ -161,7 +172,7 @@
         <div class="card-body p-1 pt-3 pe-0">
         <img src="{p.meta.picture}" alt="" style="width: 36px !important; height: 36px !important; min-width: 36px; min-height: 36px">
         <span class="d-inline ms-2 text-body">{getDisplayName(p)}</span>
-        <span class="d-inline me-2 ms-3 float-end small text-body">{event.when}</span>
+        <span class="d-inline me-2 ms-3 float-end small text-body">{when} ago</span>
 
         <div id="tooltip-container" style="" class="float-end text-muted">
             <a href="#" data-bs-toggle="modal" data-bs-target="#profileCard" data-bs-placement="bottom" title="Contact Info" class="d-inline-block pe-2 nav-link" on:click={() => profileCard(p)}>

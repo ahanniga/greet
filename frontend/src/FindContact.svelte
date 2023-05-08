@@ -6,6 +6,7 @@
 
     import { Nip19Decode, GetContactProfile } from "../wailsjs/go/main/App.js";
     import { EventsEmit } from "../wailsjs/runtime/runtime.js";
+    import {EventsOn} from "../wailsjs/runtime/runtime.js";
 
     let input;
 
@@ -16,7 +17,7 @@
             document.getElementById('searchContact').focus();
         }, 500);
     }
-    window.runtime.EventsOn('evFindContactDialog', onFindContactDialog);
+    EventsOn('evFindContactDialog', onFindContactDialog);
 
     async function getProfile(pk) {
         return await GetContactProfile(pk);

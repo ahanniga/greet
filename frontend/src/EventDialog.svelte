@@ -5,6 +5,7 @@
      */
 
     import {GetMyPubkey, GetTextNotesByEventIds, Nip19Decode} from "../wailsjs/go/main/App.js";
+    import {EventsOn} from "../wailsjs/runtime/runtime.js";
     import EventPost from "./EventPost.svelte";
 
     let myPk;
@@ -35,7 +36,7 @@
         });
     }
 
-    window.runtime.EventsOn('evEventDialog', onEventDialog);
+    EventsOn('evEventDialog', onEventDialog);
 
 </script>
 <style></style>

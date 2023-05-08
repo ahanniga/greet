@@ -5,6 +5,7 @@
      *  caught, the user icon set, contacts refreshed and the feed loaded.
      */
 
+    import {EventsOn} from "../wailsjs/runtime/runtime.js";
     import Follow from "./Follow.svelte";
     import EventPost from "./EventPost.svelte";
     import {
@@ -17,7 +18,8 @@
         GetContactProfile,
         SaveContacts,
         RestoreContacts,
-        BeginSubscriptions
+        BeginSubscriptions,
+        GetReadableRelays
     } from '../wailsjs/go/main/App.js'
     import { contactStore } from './ContactStore.js'
     import { eventStore, sortedEvents  } from "./EventStore.js";
@@ -25,6 +27,7 @@
     import loadingGif from "./assets/images/loading.gif";
     import Dialogs from "./Dialogs.svelte";
     import {EventsEmit} from "../wailsjs/runtime/runtime.js";
+    import StatusBar from "./StatusBar.svelte";
 
     let pendingNotes = [];
     let myPk = false;
@@ -35,13 +38,28 @@
     let autoRefresh = false;
 
     const onPkChange = (pk) => {
+        GetReadableRelays().then((relays)=>{
+            if(relays.length === 0) {
+                EventsEmit("evMessageDialog", {
+                    title: "No Available Relays",
+                    message: "No relays able to read from the network. Click OK to configure, or cancel",
+                    iconClass: "bi-exclamation-circle",
+                    cancelable: true,
+                    callback:   ()=>{
+                        console.log("Callback...");
+                        EventsEmit("evRelayDialog");
+                    }
+                });
+            }
+        });
+
         myPk = pk;
         GetContactProfile(pk).then((p)=>{
             myProfile = p;
             BeginSubscriptions();
         });
     }
-    window.runtime.EventsOn('evPkChange', onPkChange);
+    EventsOn('evPkChange', onPkChange);
 
     const onRefreshNote = (event) => {
         if(autoRefresh) {
@@ -51,12 +69,12 @@
             pendingNotes = pendingNotes;
         }
     }
-    window.runtime.EventsOn('evRefreshNote', onRefreshNote);
+    EventsOn('evRefreshNote', onRefreshNote);
 
     const onFollowEventNote = (event) => {
         addOrUpdateEvent(event);
     }
-    window.runtime.EventsOn('evFollowEventNote', onFollowEventNote);
+    EventsOn('evFollowEventNote', onFollowEventNote);
 
     const addOrUpdateEvent = (event) => {
         let ev = getEventIndex(event);
@@ -71,11 +89,9 @@
         for(let a = 0; a < $sortedEvents.length; a++) {
             let c = $sortedEvents[a];
             if(c.id === event.id) {
-                console.log("Got event index " + a);
                 return a;
             }
         }
-        console.log("Got event index -1");
         return -1
     }
 
@@ -105,7 +121,7 @@
             $contactStore.push(profile);
         }
     }
-    window.runtime.EventsOn('evMetadata', onMetadata);
+    EventsOn('evMetadata', onMetadata);
 
     const refreshFeed = () => {
         if(pendingNotes.length > 0 && !filtering) {
@@ -124,16 +140,16 @@
         $contactStore = [];
         RefreshContactProfiles();
     }
-    window.runtime.EventsOn('evRefreshContacts', onRefreshContacts);
+    EventsOn('evRefreshContacts', onRefreshContacts);
 
     const launchPostDialog = () => {
-        window.runtime.EventsEmit("evPostDialog");
+        EventsEmit("evPostDialog");
     }
     const launchRelayDialog = () => {
-        window.runtime.EventsEmit("evRelayDialog");
+        EventsEmit("evRelayDialog");
     }
     const launchSearchContact = () => {
-        window.runtime.EventsEmit("evFindContactDialog");
+        EventsEmit("evFindContactDialog");
     }
 
     const actionQuit = (e) => {
@@ -143,7 +159,7 @@
     const launchProfileCard = () => {
         GetMyPubkey().then((pk)=>{
             GetContactProfile(pk).then((p)=>{
-                window.runtime.EventsEmit("evProfileCard", p);
+                EventsEmit("evProfileCard", p);
             });
         });
     }
@@ -164,7 +180,7 @@
         eventStore.deleteAll();
         GetTextNotesForPubkeys([profile.pk], "evFollowEventNote", true);
     }
-    window.runtime.EventsOn('evFilterByProfile', onFilterByProfile);
+    EventsOn('evFilterByProfile', onFilterByProfile);
 
     const resetFilterAndRefresh = () => {
         filtering = false;
@@ -356,7 +372,11 @@
                 </div>
             </div>
         </div>
-        <div class="row flex-shrink-0 ">
+        <div class="row">
+<!--            <div class="col-12" style="background: #0d6efd">-->
+            <div class="col-12 border-top mt-2 p-1 px-3">
+            <StatusBar />
+            </div>
         </div>
     </div>
 </main>

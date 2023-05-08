@@ -18,7 +18,7 @@
     }
 
     const filter = () => {
-        window.runtime.EventsEmit("evFilterByProfile", profile);
+        EventsEmit("evFilterByProfile", profile);
     }
 
     const copyPubkey = () => {

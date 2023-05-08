@@ -5,6 +5,7 @@
      */
 
     import {LoginWithPin} from "../wailsjs/go/main/App.js";
+    import {EventsOn} from "../wailsjs/runtime/runtime.js";
 
     const onPinDialog = () => {
         document.getElementById('launchPinDialog').click();
@@ -13,7 +14,7 @@
             document.getElementById('pin').focus();
         }, 500);
     }
-    window.runtime.EventsOn('evPinDialog', onPinDialog);
+    EventsOn('evPinDialog', onPinDialog);
 
     const showError = (msg) => {
         let d = document.getElementById("pinDialogErrorMessage");
@@ -40,7 +41,7 @@
     }
 
     const resetAccount = () => {
-        window.runtime.EventsEmit("evLoginDialog");
+        EventsEmit("evLoginDialog");
     }
 
 </script>

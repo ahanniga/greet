@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/dustin/go-humanize"
 	"github.com/nbd-wtf/go-nostr"
 	"github.com/nbd-wtf/go-nostr/nip19"
 	"github.com/rs/zerolog"
@@ -64,6 +63,16 @@ func (a *App) startup(ctx context.Context) {
 			}
 		}
 	}
+
+	// Maintenance loop
+	go func() {
+		for {
+			a.CheckRelays()
+			a.PingTimer()
+			time.Sleep(time.Second * 10)
+		}
+	}()
+
 	log.Info().Msg("...start up done")
 }
 
@@ -128,6 +137,7 @@ func (a *App) OnDomReady(ctx context.Context) {
 			}()
 		}
 	}
+	a.CheckRelays()
 }
 
 func (a *App) BeginSubscriptions() {
@@ -348,10 +358,20 @@ func (a *App) GetContactProfile(pk string) *Profile {
 	}
 }
 
+func (a *App) GetReadableRelays() []*string {
+	rs := []*string{}
+	for _, r := range a.relayPool.pool {
+		if r.Enabled && r.Read && (r.conn.ConnectionError == nil) {
+			rs = append(rs, &r.Url)
+		}
+	}
+	return rs
+}
+
 func (a *App) GetWritableRelays() []*string {
 	rs := []*string{}
 	for _, r := range a.relayPool.pool {
-		if r.Enabled && r.Write {
+		if r.Enabled && r.Write && (r.conn.ConnectionError == nil) {
 			rs = append(rs, &r.Url)
 		}
 	}
@@ -389,7 +409,6 @@ func (a *App) GetTextNotesForPubkeys(pks []string, postEvent string, repost bool
 	ch := make(chan *nostr.Event)
 	go func() {
 		for ev := range ch {
-			ev.SetExtra("when", humanize.Time(ev.CreatedAt.Time()))
 			existingEvent := db.GetEvent(ev.ID)
 			db.AddEvent(ev.ID, ev)
 			if existingEvent == nil || repost {
@@ -415,7 +434,6 @@ func (a *App) SubscribeToFeedForPubkeys(pks []string, repost bool) {
 	ch1 := make(chan *nostr.Event)
 	go func() {
 		for ev := range ch {
-			ev.SetExtra("when", humanize.Time(ev.CreatedAt.Time()))
 			existingEvent := db.GetEvent(ev.ID)
 			db.AddEvent(ev.ID, ev)
 			if existingEvent == nil || repost {
@@ -425,7 +443,6 @@ func (a *App) SubscribeToFeedForPubkeys(pks []string, repost bool) {
 	}()
 	go func() {
 		for ev := range ch1 {
-			ev.SetExtra("when", humanize.Time(ev.CreatedAt.Time()))
 			existingEvent := db.GetEvent(ev.ID)
 			db.AddEvent(ev.ID, ev)
 			if existingEvent == nil || repost {
@@ -456,7 +473,6 @@ func (a *App) GetTextNotesByEventIds(ids []string) []*nostr.Event {
 	ch := make(chan *nostr.Event)
 	go func() {
 		for ev := range ch {
-			ev.SetExtra("when", humanize.Time(ev.CreatedAt.Time()))
 			db.AddEvent(ev.ID, ev)
 			events = append(events, ev)
 		}
@@ -789,4 +805,24 @@ func (a *App) SaveProfile(metadata ProfileMetadata) error {
 	}
 	a.PostEvent(nostr.KindSetMetadata, nostr.Tags{}, string(content))
 	return nil
+}
+
+func (a *App) CheckRelays() {
+	readable := a.GetReadableRelays()
+	writable := a.GetWritableRelays()
+	numSubs := 0
+	for _, url := range readable {
+		relay := a.relayPool.GetRelayByUrl(*url)
+		numSubs += len(relay.subs)
+	}
+
+	opts := make(map[string]int)
+	opts["readable"] = len(readable)
+	opts["writable"] = len(writable)
+	opts["subs"] = numSubs
+	runtime.EventsEmit(a.ctx, "evRelayStatus", opts)
+}
+
+func (a *App) PingTimer() {
+	runtime.EventsEmit(a.ctx, "evTimer", time.Now().UnixMilli())
 }

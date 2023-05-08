@@ -8,14 +8,17 @@
 
 
     import {GetRelays, SetRelays} from "../wailsjs/go/main/App.js";
+    import {EventsOn} from "../wailsjs/runtime/runtime.js";
+
     let relays = [];
 
     const onRelayDialog = () => {
         GetRelays().then((r) => {
             relays = r;
         });
+        document.getElementById('launchRelayDialog').click();
     }
-    window.runtime.EventsOn('evRelayDialog', onRelayDialog);
+    EventsOn('evRelayDialog', onRelayDialog);
 
     const showError = (msg) => {
         let d = document.getElementById("relayErrorMessage");
@@ -83,6 +86,7 @@
 </script>
 <style></style>
 
+<a class="visually-hidden" id="launchRelayDialog" data-bs-toggle="modal" data-bs-target="#relayDialog"></a>
 <div class="modal" id="relayDialog" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered modal-lg" >
         <div class="modal-content">

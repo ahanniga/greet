@@ -32,12 +32,10 @@ func (p *RelayPool) UnsubscribeAll() {
 func (p *RelayPool) Add(relay *RelayStruct) error {
 	if relay.Enabled {
 		log.Debug().Msgf("Adding relay %s to pool", relay.Url)
-		conn, err := nostr.RelayConnect(p.rootCtx, relay.Url)
+		err := relay.Connect(p.rootCtx)
 		if err != nil {
 			return err
 		}
-		relay.conn = conn
-		log.Info().Msgf("Relay %s added and connected", relay.Url)
 		p.pool = append(p.pool, relay)
 	}
 
@@ -47,7 +45,7 @@ func (p *RelayPool) Add(relay *RelayStruct) error {
 func (p *RelayPool) QuerySync(f *nostr.Filter, c chan *nostr.Event) {
 	wg := sync.WaitGroup{}
 	for _, relay := range p.pool {
-		if relay.Read {
+		if relay.Enabled && relay.Read {
 			wg.Add(1)
 			go func(r *RelayStruct) {
 				result, err := r.conn.QuerySync(p.rootCtx, *f)
@@ -69,7 +67,7 @@ func (p *RelayPool) QuerySync(f *nostr.Filter, c chan *nostr.Event) {
 
 func (p *RelayPool) Subscribe(f *nostr.Filter, c chan *nostr.Event, ac chan *nostr.Event) {
 	for _, relay := range p.pool {
-		if relay.Read {
+		if relay.Enabled && relay.Read {
 			go func(r *RelayStruct) {
 				gotEose := false
 				sub, err := r.conn.Subscribe(p.rootCtx, []nostr.Filter{*f})
@@ -99,11 +97,7 @@ func (p *RelayPool) Subscribe(f *nostr.Filter, c chan *nostr.Event, ac chan *nos
 						log.Debug().Msgf("Got EOSE from %s", r.Url)
 						gotEose = true
 					case <-sub.Context.Done():
-						log.Debug().Msgf("Relay %s completed: ", r.Url)
-
-						// TODO: For now just disable, but try a reconnect
-						r.conn.Close()
-						r.Enabled = false
+						log.Debug().Msgf("Subscription to relay %s completed: ", r.Url)
 						return
 					}
 				}
@@ -147,6 +141,3 @@ func (p *RelayPool) GetRelayByUrl(url string) *RelayStruct {
 	}
 	return nil
 }
-
-
-

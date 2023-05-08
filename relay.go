@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"github.com/nbd-wtf/go-nostr"
+	"github.com/rs/zerolog/log"
 )
 
 type RelayStruct struct {
@@ -85,6 +87,16 @@ type RelayMetadata struct {
 		} `json:"admission"`
 		Publication []interface{} `json:"publication"`
 	} `json:"fees"`
+}
+
+func (r *RelayStruct) Connect(ctx context.Context) error {
+	conn, err := nostr.RelayConnect(ctx, r.Url)
+	if err != nil {
+		return err
+	}
+	log.Debug().Msgf("Successful connection to %s", r.Url)
+	r.conn = conn
+	return nil
 }
 
 func (r *RelayStruct) RemoveSub(id string) {

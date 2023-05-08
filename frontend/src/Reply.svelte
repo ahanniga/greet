@@ -10,7 +10,7 @@
         Nip19Decode,
         GetContactProfile
     } from "../wailsjs/go/main/App.js";
-    import { EventsEmit } from "../wailsjs/runtime/runtime.js";
+    import { EventsEmit, EventsOn } from "../wailsjs/runtime/runtime.js";
     import { contactStore } from './ContactStore'
 
     let promise;
@@ -41,7 +41,7 @@
         }
         document.getElementById('replyForm').focus();
     }
-    window.runtime.EventsOn('evReplyDialog', onReplyDialog);
+    EventsOn('evReplyDialog', onReplyDialog);
 
     const hasExistingPTag = (tags, val) => {
         for(let a = 0; a < tags.length; a++) {

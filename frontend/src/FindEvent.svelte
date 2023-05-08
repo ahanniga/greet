@@ -6,6 +6,7 @@
 
     import { Nip19Decode } from "../wailsjs/go/main/App.js";
     import { EventsEmit } from "../wailsjs/runtime/runtime.js";
+    import {EventsOn} from "../wailsjs/runtime/runtime.js";
 
     const onFindEventDialog = () => {
         document.getElementById('launchFindEventDialog').click();
@@ -13,7 +14,7 @@
             document.getElementById('findEvent').focus();
         }, 500);
     }
-    window.runtime.EventsOn('evFindEventDialog', onFindEventDialog);
+    EventsOn('evFindEventDialog', onFindEventDialog);
 
 
     const showError = (msg) => {

@@ -4,7 +4,6 @@ go 1.18
 
 require (
 	github.com/arriqaaq/hash v0.1.2
-	github.com/dustin/go-humanize v1.0.1
 	github.com/fstanis/screenresolution v0.0.0-20190527020317-869904d15333
 	github.com/nbd-wtf/go-nostr v0.17.1
 	github.com/rs/zerolog v1.29.1

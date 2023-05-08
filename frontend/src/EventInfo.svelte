@@ -1,4 +1,6 @@
 <script>
+    import {EventsOn} from "../wailsjs/runtime/runtime.js";
+
     /**
      *  Display the raw note event in a dialog
      */
@@ -8,7 +10,7 @@
     const onEventInfo = (ev) => {
         event = ev;
     }
-    window.runtime.EventsOn('evEventInfo', onEventInfo);
+    EventsOn('evEventInfo', onEventInfo);
 
 </script>
 <style></style>

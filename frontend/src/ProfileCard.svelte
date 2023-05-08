@@ -6,7 +6,7 @@
      */
 
     import {FollowContact, UnfollowContact, GetContactProfile, GetMyPubkey, SaveProfile} from "../wailsjs/go/main/App.js";
-    import {EventsEmit} from "../wailsjs/runtime/runtime.js";
+    import {EventsEmit, EventsOn} from "../wailsjs/runtime/runtime.js";
 
     let id = "";
     let npub = "";
@@ -48,14 +48,14 @@
         banner = profile.meta.banner || "";
         following = profile.following;
     }
-    window.runtime.EventsOn('evProfileCard', onProfileCard);
+    EventsOn('evProfileCard', onProfileCard);
 
     const onProfilePk = (pk) => {
         GetContactProfile(pk).then((p)=>{
             EventsEmit("evProfileCard", p);
         })
     }
-    window.runtime.EventsOn('evProfileCardPk', onProfilePk);
+    EventsOn('evProfileCardPk', onProfilePk);
 
     const followContact = (pk) => {
         FollowContact([pk]).then((err) => {
@@ -70,7 +70,7 @@
     }
 
     const filter = () => {
-        window.runtime.EventsEmit("evFilterByProfile", prof);
+        EventsEmit("evFilterByProfile", prof);
     }
 
     const changeCheck = (e) => {

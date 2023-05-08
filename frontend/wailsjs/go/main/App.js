@@ -6,6 +6,10 @@ export function BeginSubscriptions() {
   return window['go']['main']['App']['BeginSubscriptions']();
 }
 
+export function CheckRelays() {
+  return window['go']['main']['App']['CheckRelays']();
+}
+
 export function DeleteEvent(arg1) {
   return window['go']['main']['App']['DeleteEvent'](arg1);
 }
@@ -38,6 +42,10 @@ export function GetMyPubkey() {
   return window['go']['main']['App']['GetMyPubkey']();
 }
 
+export function GetReadableRelays() {
+  return window['go']['main']['App']['GetReadableRelays']();
+}
+
 export function GetRelays() {
   return window['go']['main']['App']['GetRelays']();
 }
@@ -68,6 +76,10 @@ export function LoginWithPin(arg1) {
 
 export function Nip19Decode(arg1) {
   return window['go']['main']['App']['Nip19Decode'](arg1);
+}
+
+export function PingTimer() {
+  return window['go']['main']['App']['PingTimer']();
 }
 
 export function PkToNpub(arg1) {

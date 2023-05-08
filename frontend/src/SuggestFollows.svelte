@@ -5,6 +5,7 @@
      */
 
     import {GetContactProfile, FollowContact, RefreshFeedReset} from "../wailsjs/go/main/App.js";
+    import {EventsOn} from "../wailsjs/runtime/runtime.js";
 
     let follows = [ ]
     const onSuggestFollowsDialog = () => {
@@ -20,7 +21,7 @@
             "8fb140b4e8ddef97ce4b821d247278a1a4353362623f64021484b372f948000c", // Fishcake
         ];
     }
-    window.runtime.EventsOn('evSuggestFollowsDialog', onSuggestFollowsDialog);
+    EventsOn('evSuggestFollowsDialog', onSuggestFollowsDialog);
 
     const showError = (msg) => {
         let d = document.getElementById("suggestFollowsErrorMessage");

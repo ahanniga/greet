@@ -7,11 +7,12 @@
 
     import {Nip19Decode, SetLoginWithPrivKey} from "../wailsjs/go/main/App.js";
     import {EventsEmit} from "../wailsjs/runtime/runtime.js";
+    import {EventsOn} from "../wailsjs/runtime/runtime.js";
 
     const onLoginDialog = () => {
         document.getElementById('launchLoginDialog').click();
     }
-    window.runtime.EventsOn('evLoginDialog', onLoginDialog);
+    EventsOn('evLoginDialog', onLoginDialog);
 
     const showError = (msg) => {
         let d = document.getElementById("loginErrorMessage");

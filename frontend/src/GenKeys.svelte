@@ -6,13 +6,14 @@
 
     import {GenerateKeys, SaveNewKeys } from "../wailsjs/go/main/App.js";
     import {EventsEmit} from "../wailsjs/runtime/runtime.js";
+    import {EventsOn} from "../wailsjs/runtime/runtime.js";
 
     let enableSave = true;
 
     const onGenkeysDialog = () => {
         document.getElementById('launchGenKeysDialog').click();
     }
-    window.runtime.EventsOn('evGenkeysDialog', onGenkeysDialog);
+    EventsOn('evGenkeysDialog', onGenkeysDialog);
 
     const showError = (msg) => {
         let d = document.getElementById("getKeysErrorMessage");

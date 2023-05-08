@@ -13,7 +13,7 @@
         PublishContentToSelectedRelays,
         GetContactProfile
     } from "../wailsjs/go/main/App.js";
-    import {EventsEmit} from "../wailsjs/runtime/runtime.js";
+    import {EventsEmit, EventsOn} from "../wailsjs/runtime/runtime.js";
     import {contactStore} from "./ContactStore";
 
     let promise;
@@ -23,7 +23,7 @@
         promise = GetWritableRelays();
         document.getElementById('postForm').focus();
     }
-    window.runtime.EventsOn('evPostDialog', onPostDialog);
+    EventsOn('evPostDialog', onPostDialog);
 
     const showError = (msg) => {
         let d = document.getElementById("postErrorMessage");
