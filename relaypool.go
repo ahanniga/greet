@@ -5,6 +5,7 @@ import (
 	"github.com/nbd-wtf/go-nostr"
 	"github.com/rs/zerolog/log"
 	"sync"
+	"time"
 )
 
 type RelayPool struct {
@@ -50,7 +51,17 @@ func (p *RelayPool) QuerySync(f *nostr.Filter, c chan *nostr.Event) {
 			go func(r *RelayStruct) {
 				result, err := r.conn.QuerySync(p.rootCtx, *f)
 				if err != nil {
-					return
+					log.Error().Msgf("QuerySync error from %s: %s", r.Url, err.Error())
+
+					// Try a reconnect, but disable relay if it fails
+					time.Sleep(time.Second * 2)
+					relay.Connect(p.rootCtx)
+					result, err = r.conn.QuerySync(p.rootCtx, *f)
+					if err != nil {
+						log.Error().Msgf("QuerySync (retry) error from %s: %s: disabled", r.Url, err.Error())
+						r.Enabled = false
+						return
+					}
 				}
 				for i := 0; i < len(result); i++ {
 					ev := result[i]
@@ -69,6 +80,7 @@ func (p *RelayPool) Subscribe(f *nostr.Filter, c chan *nostr.Event, ac chan *nos
 	for _, relay := range p.pool {
 		if relay.Enabled && relay.Read {
 			go func(r *RelayStruct) {
+
 				gotEose := false
 				sub, err := r.conn.Subscribe(p.rootCtx, []nostr.Filter{*f})
 

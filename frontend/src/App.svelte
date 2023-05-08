@@ -131,7 +131,6 @@
             pendingNotes = [];
         } else {
             // Force a full refresh
-            console.log("resetFilterAndRefresh...");
             resetFilterAndRefresh();
         }
     }

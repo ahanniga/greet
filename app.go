@@ -163,6 +163,7 @@ func (a *App) RefreshFeed(repost bool) {
 	if len(followedPks) == 0 {
 		return
 	}
+
 	chks := chunkSlice(followedPks, QUERY_SIZE)
 	for _, chk := range chks {
 		a.SubscribeToFeedForPubkeys(chk, repost)

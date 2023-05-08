@@ -133,44 +133,44 @@
                     <img style="width: 100% !important; overflow-y: hidden" src="{banner}">
                 </div>
 
-                <div class="input-group mb-3" style="">
+                <div class="input-group mb-2" style="">
                     <span class="input-group-text" style="width: {labelw}px">About</span>
                     <textarea id="prAbout" readonly="{readonly}" class="form-control" on:change={changeCheck}>{about}</textarea>
                 </div>
 
-                <div class="input-group mb-3">
+                <div class="input-group mb-2">
                     <span class="input-group-text" style="width: {labelw}px" id="basic-name">Name</span>
-                    <input id="prName" readonly="{readonly}" type="text" class="form-control" on:change={changeCheck} value="{name}">
+                    <input id="prName" readonly="{readonly}" type="text" class="form-control " on:change={changeCheck} value="{name}">
                 </div>
-                <div class="input-group mb-3">
+                <div class="input-group mb-2">
                     <span class="input-group-text" style="width: {labelw}px" id="basic-display-name">Display Name</span>
-                    <input id="prDisplayName" readonly="{readonly}" type="text" class="form-control" on:change={changeCheck} value="{display_name}">
+                    <input id="prDisplayName" readonly="{readonly}" type="text" class="form-control " on:change={changeCheck} value="{display_name}">
                 </div>
-                <div class="input-group mb-3">
+                <div class="input-group mb-2">
                     <span class="input-group-text" style="width: {labelw}px" id="basic-id">Pubkey</span>
                     <input readonly="true" type="text" class="form-control" on:change={changeCheck} value="{id}">
                 </div>
-                <div class="input-group mb-3">
+                <div class="input-group mb-2">
                     <span class="input-group-text" style="width: {labelw}px" id="basic-npub">Npub</span>
                     <input readonly="true" type="text" class="form-control" on:change={changeCheck} value="{npub}">
                 </div>
-                <div class="input-group mb-3">
+                <div class="input-group mb-2">
                     <span class="input-group-text" style="width: {labelw}px" id="basic-picture">Picture</span>
                     <input id="prPicture" readonly="{readonly}" type="text" class="form-control" on:change={changeCheck} value="{picture}">
                 </div>
-                <div class="input-group mb-3">
+                <div class="input-group mb-2">
                     <span class="input-group-text" style="width: {labelw}px" id="basic-banner">Banner</span>
                     <input id="prBanner" readonly="{readonly}" type="text" class="form-control" on:change={changeCheck} value="{banner}">
                 </div>
-                <div class="input-group mb-3">
+                <div class="input-group mb-2">
                     <span class="input-group-text" style="width: {labelw}px" id="basic-website">Website</span>
                     <input id="prWebsite" readonly="{readonly}" type="text" class="form-control" on:change={changeCheck} value="{website}">
                 </div>
-                <div class="input-group mb-3">
+                <div class="input-group mb-2">
                     <span class="input-group-text" style="width: {labelw}px" id="basic-nip05">NIP05</span>
                     <input id="prNip05" readonly="{readonly}" type="text" class="form-control" on:change={changeCheck} value="{nip05}">
                 </div>
-                <div class="input-group mb-3">
+                <div class="input-group mb-2">
                     <span class="input-group-text" style="width: {labelw}px" id="basic-addon1">LN</span>
                     <input id="prLn" readonly="{readonly}" type="text" class="form-control" on:change={changeCheck} value="{lud0616}">
                 </div>

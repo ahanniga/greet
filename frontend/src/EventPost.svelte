@@ -170,41 +170,41 @@
         <img src="{loadingGif}" width="24" height="24">
     {:then p}
         <div class="card-body p-1 pt-3 pe-0">
-        <img src="{p.meta.picture}" alt="" style="width: 36px !important; height: 36px !important; min-width: 36px; min-height: 36px">
-        <span class="d-inline ms-2 text-body">{getDisplayName(p)}</span>
-        <span class="d-inline me-2 ms-3 float-end small text-body">{when} ago</span>
+            <img src="{p.meta.picture}" alt="" style="width: 36px !important; height: 36px !important; min-width: 36px; min-height: 36px">
+            <span class="d-inline ms-2 text-body">{getDisplayName(p)}</span>
+            <span class="d-inline me-2 ms-3 float-end small text-body">{when} ago</span>
 
-        <div id="tooltip-container" style="" class="float-end text-muted">
-            <a href="#" data-bs-toggle="modal" data-bs-target="#profileCard" data-bs-placement="bottom" title="Contact Info" class="d-inline-block pe-2 nav-link" on:click={() => profileCard(p)}>
-                <i class="mb-3 bi bi-person"></i>
-            </a>
-            <a href="#" data-bs-toggle="modal" data-bs-target="#eventInfo" data-bs-placement="bottom" title="Event Source" class="d-inline-block pe-2 nav-link"  on:click={eventInfo} >
-                <i class="mb-3 bi bi-info-circle"></i>
-            </a>
-            <a href="#" data-bs-toggle="modal" data-bs-target="#replyDialog" data-bs-placement="bottom"  title="Reply" class="d-inline-block pe-2 nav-link" on:click={() => openReplyDialog(event)}>
-                <i class="mb-3 bi bi-reply"></i>
-            </a>
-            <a href="#" data-bs-toggle="modal" data-bs-target="#confirmDialog" data-bs-placement="bottom" title="Boost" class="d-inline-block pe-2 nav-link" on:click={() => { confirmBoost(event, getDisplayName(p)) }}>
-                <i class="mb-3 bi bi-arrow-repeat"></i>
-            </a>
-            <!--{@debug myPk}-->
-            {#if myPk === p.pk}
-            <a href="#" data-bs-toggle="modal" data-bs-placement="bottom" title="Delete" class="d-inline-block pe-2 nav-link" on:click={eventDelete}>
-                <i class="mb-3 bi bi-trash"></i>
-            </a>
-            {/if}
+            <div id="tooltip-container" style="" class="float-end text-muted">
+                <a href="#" data-bs-toggle="modal" data-bs-target="#profileCard" data-bs-placement="bottom" title="Contact Info" class="d-inline-block pe-2 nav-link" on:click={() => profileCard(p)}>
+                    <i class="mb-3 bi bi-person"></i>
+                </a>
+                <a href="#" data-bs-toggle="modal" data-bs-target="#eventInfo" data-bs-placement="bottom" title="Event Source" class="d-inline-block pe-2 nav-link"  on:click={eventInfo} >
+                    <i class="mb-3 bi bi-info-circle"></i>
+                </a>
+                <a href="#" data-bs-toggle="modal" data-bs-target="#replyDialog" data-bs-placement="bottom"  title="Reply" class="d-inline-block pe-2 nav-link" on:click={() => openReplyDialog(event)}>
+                    <i class="mb-3 bi bi-reply"></i>
+                </a>
+                <a href="#" data-bs-toggle="modal" data-bs-target="#confirmDialog" data-bs-placement="bottom" title="Boost" class="d-inline-block pe-2 nav-link" on:click={() => { confirmBoost(event, getDisplayName(p)) }}>
+                    <i class="mb-3 bi bi-arrow-repeat"></i>
+                </a>
+                <!--{@debug myPk}-->
+                {#if myPk === p.pk}
+                <a href="#" data-bs-toggle="modal" data-bs-placement="bottom" title="Delete" class="d-inline-block pe-2 nav-link" on:click={eventDelete}>
+                    <i class="mb-3 bi bi-trash"></i>
+                </a>
+                {/if}
 
-        </div>
+            </div>
 
             <span class="d-inline mb-2 text-muted">{p.meta.nip05 || ""}</span>
-        {#if event.kind === 6}
-            <span class="badge bg-danger ms-2">Boosted</span>
-        {/if}
-        {#if includesMe(event) }
-            <span class="badge bg-success ms-2">Tagged</span>
-        {/if}
+            {#if event.kind === 6}
+                <span class="badge bg-danger ms-2">Boosted</span>
+            {/if}
+            {#if includesMe(event) }
+                <span class="badge bg-success ms-2">Tagged</span>
+            {/if}
 
-        <p class="mt-2 text-primary small">
+            <p class="mt-2 text-primary small">
 
             {#await GetTaggedProfiles(event.id)}
                 <img src="{loadingGif}" width="18" height="18">
@@ -220,42 +220,43 @@
             <!--{/each}-->
         </p>
 
-        {#if event.kind === 1 }
-            <p class="font-12 my-3" >
-                {@html parseContent(event.content)}
-            </p>
-        {/if}
-
-        {#if event.kind === 6}
-            {#await GetTaggedEvents(event.id)}
-                <img src="{loadingGif}" width="18" height="18">
-            {:then taggedEvents}
-                {#each taggedEvents as taggedEvent}
-                <LookupEvent {taggedEvent} {myPk} />
-                {/each}
-            {/await}
-        {:else}
-            {#if getTaggedEventIds(event).length > 0}
-                <div class="text-muted m-0 p-0 expander" align="left" title="Expand tagged events" on:click={expandPost}>
-                    {getTaggedEventIds(event).length}
-                    {#if taggedEvents.length === 0}
-                        {#if showWaiting}
-                    <img style="margin-bottom: 3px" src="{loadingGif}" width="16" height="16">
-                        {:else}
-                            <i class="bi-caret-right-fill me-2"/>
-                        {/if}
-                        {#if notFound}
-                            <span class="text-danger">Event not found</span>
-                        {/if}
-                    {:else}
-                        <i class="bi-caret-down-fill me-2"/>
-                    {/if}
-                </div>
+            {#if event.kind === 1 }
+                <p class="font-12 my-3" >
+                    {@html parseContent(event.content)}
+                </p>
             {/if}
-        {/if}
-        {#each taggedEvents as taggedEvent}
-            <LookupEvent {taggedEvent} {myPk} />
-        {/each}
+
+            {#if event.kind === 6}
+                {#await GetTaggedEvents(event.id)}
+                    <img src="{loadingGif}" width="18" height="18">
+                {:then taggedEvents}
+                    {#each taggedEvents as taggedEvent}
+                    <LookupEvent {taggedEvent} {myPk} />
+                    {/each}
+                {/await}
+            {:else}
+                {#if getTaggedEventIds(event).length > 0}
+                    <div class="text-muted m-0 p-0 expander" align="left" title="Expand tagged events" on:click={expandPost}>
+                        {getTaggedEventIds(event).length}
+                        {#if taggedEvents.length === 0}
+                            {#if showWaiting}
+                        <img style="margin-bottom: 3px" src="{loadingGif}" width="16" height="16">
+                            {:else}
+                                <i class="bi-caret-right-fill me-2"/>
+                            {/if}
+                            {#if notFound}
+                                <span class="text-danger">Event not found</span>
+                            {/if}
+                        {:else}
+                            <i class="bi-caret-down-fill me-2"/>
+                        {/if}
+                    </div>
+                {/if}
+                {#each taggedEvents as taggedEvent}
+                    <LookupEvent {taggedEvent} {myPk} />
+                {/each}
+            {/if}
+
         </div>
     {/await}
 </div>
