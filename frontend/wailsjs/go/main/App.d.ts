@@ -39,7 +39,7 @@ export function GetWritableRelays():Promise<Array<any>>;
 
 export function LoginWithPin(arg1:string):Promise<void>;
 
-export function Nip19Decode(arg1:string):Promise<string>;
+export function Nip19Decode(arg1:string):Promise<Array<string>>;
 
 export function PingTimer():Promise<void>;
 

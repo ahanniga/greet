@@ -13,6 +13,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"time"
 )
@@ -44,6 +45,7 @@ func NewApp() *App {
 }
 
 func (a *App) startup(ctx context.Context) {
+
 	a.ctx = ctx
 	setupLogging()
 
@@ -181,14 +183,30 @@ func (a *App) PkToNpub(pk string) (string, error) {
 	return npub, err
 }
 
-func (a *App) Nip19Decode(uri string) (string, error) {
-	_, val, err := nip19.Decode(uri)
+func (a *App) Nip19Decode(uri string) ([]string, error) {
+	result := []string{}
+	prefix, val, err := nip19.Decode(uri)
 	if err != nil {
 		log.Err(err)
-		return "", err
+		return result, err
 	}
-	log.Trace().Msgf("Nip19Decode: %s -> %s", uri, val)
-	return fmt.Sprintf("%v", val), nil
+	log.Debug().Msgf("Nip19Decode: type %s, %s -> %s %v", reflect.TypeOf(val), uri, prefix, val)
+
+	result = append(result, prefix)
+	switch val.(type) {
+	case string:
+		result = append(result, val.(string))
+	case nostr.EventPointer:
+		ep := val.(nostr.EventPointer)
+		result = append(result, ep.ID, ep.Author, string(ep.Kind))
+		for _, r := range ep.Relays {
+			result = append(result, r)
+		}
+	default:
+		result = append(result, fmt.Sprint(val))
+	}
+
+	return result, nil
 }
 
 func (a *App) GetContactList(pk string) []string {
@@ -336,18 +354,22 @@ func (a *App) GetTaggedEvents(parentEvent string) []*nostr.Event {
 	return cachedEvents
 }
 
-func (a *App) GetContactProfile(pk string) *Profile {
+func (a *App) GetContactProfile(pk string) (*Profile, error) {
 	if strings.HasPrefix(pk, "npub") {
-		pk, _ = a.Nip19Decode(pk)
+		val, err := a.Nip19Decode(pk)
+		if err != nil {
+			return nil, err
+		}
+		pk = val[1]
 	}
 	if db.HasProfile(pk) {
 		log.Trace().Msgf("GetContactProfile for PK %s (cache)", pk)
-		return db.GetProfile(pk)
+		return db.GetProfile(pk), nil
 	}
 	log.Trace().Msgf("GetContactProfile for PK %s (query)", pk)
 	a.GetMetadataEvents([]string{pk})
 	if db.HasProfile(pk) {
-		return db.GetProfile(pk)
+		return db.GetProfile(pk), nil
 	}
 	npub, _ := a.PkToNpub(pk)
 	return &Profile{
@@ -356,7 +378,7 @@ func (a *App) GetContactProfile(pk string) *Profile {
 		Meta:      ProfileMetadata{},
 		Npub:      npub,
 		Relays:    nil,
-	}
+	}, nil
 }
 
 func (a *App) GetReadableRelays() []*string {
@@ -629,10 +651,11 @@ func (a *App) SetLoginWithPrivKey(keypin []string) error {
 	pin := keypin[1]
 
 	if strings.HasPrefix(key, "nsec") {
-		key, err = a.Nip19Decode(key)
-	}
-	if err != nil {
-		return err
+		val, e := a.Nip19Decode(key)
+		if e != nil {
+			return err
+		}
+		key = val[1]
 	}
 
 	if pin == "" {
@@ -826,4 +849,42 @@ func (a *App) CheckRelays() {
 
 func (a *App) PingTimer() {
 	runtime.EventsEmit(a.ctx, "evTimer", time.Now().UnixMilli())
+}
+
+func TestEncodeDecodeNEventTestEncodeDecodeNEvent(t *zerolog.Event) string {
+	nevent, err := nip19.EncodeEvent(
+		"45326f5d6962ab1e3cd424e758c3002b8665f7b0d8dcee9fe9e288d7751ac194",
+		[]string{"wss://banana.com"},
+		"7fa56f5d6962ab1e3cd424e758c3002b8665f7b0d8dcee9fe9e288d7751abb88",
+	)
+	if err != nil {
+		t.Msgf("shouldn't error: %s", err)
+	}
+
+	prefix, res, err := nip19.Decode(nevent)
+	if err != nil {
+		t.Msgf("shouldn't error: %s", err)
+	}
+
+	if prefix != "nevent" {
+		t.Msgf("should have 'nevent' prefix, not '%s'", prefix)
+	}
+
+	ep, ok := res.(nostr.EventPointer)
+	if !ok {
+		t.Msgf("'%s' should be an nevent, not %v", nevent, res)
+	}
+
+	if ep.Author != "7fa56f5d6962ab1e3cd424e758c3002b8665f7b0d8dcee9fe9e288d7751abb88" {
+		t.Msgf("wrong author")
+	}
+
+	if ep.ID != "45326f5d6962ab1e3cd424e758c3002b8665f7b0d8dcee9fe9e288d7751ac194" {
+		t.Msgf("wrong id")
+	}
+
+	if len(ep.Relays) != 1 || ep.Relays[0] != "wss://banana.com" {
+		t.Msgf("wrong relay")
+	}
+	return nevent
 }

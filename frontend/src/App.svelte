@@ -36,6 +36,7 @@
     let filterProfile = false;
     let dark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
     let autoRefresh = false;
+    let contactPanel = true;
 
     const onPkChange = (pk) => {
         GetReadableRelays().then((relays)=>{
@@ -202,6 +203,16 @@
         autoRefresh = !autoRefresh;
     }
 
+    const toggleFollows = () => {
+        contactPanel = !contactPanel;
+        let panelVal = contactPanel ? 'block' : 'none';
+        let icnVal = contactPanel ? 'none' : 'inline-block';
+
+        document.getElementById("followsHeader").style.setProperty('display', panelVal);
+        document.getElementById("followsPanel").style.setProperty('display', panelVal);
+        document.getElementById("contactMenuIcn").style.setProperty('display', icnVal, 'important');
+    }
+
     const saveContacts = () => {
         SaveContacts().then((path)=>{
             EventsEmit("evMessageDialog", {
@@ -329,8 +340,8 @@
             </ul>
         </nav>
         <div class="row">
-            <div class="col-3">
-                <h6 class="border-bottom pb-2 mb-0">Follows <span class="ms-2 badge bg-primary-subtle">{$contactStore.length}</span>
+            <div class="col-3" id="followsHeader">
+                <h6 class="border-bottom pb-2 mb-0"><i class="bi bi-list me-2" style="cursor: pointer;" on:click={toggleFollows} />Follows <span class="ms-2 badge bg-primary-subtle">{$contactStore.length}</span>
                     <span class="float-end">
                             <a href="#" class="text-muted" data-bs-toggle="modal" data-bs-target="#findContactDialog" data-bs-placement="bottom" title="Find contact by key or npub" on:click={launchSearchContact}><i class="bi-search"></i></a>
                             <a href="#" class="text-muted" data-bs-placement="bottom" title="Refresh list" on:click={onRefreshContacts}><i class="bi-arrow-clockwise"></i></a>
@@ -345,12 +356,12 @@
                     </a><span class="text-primary-emphasis"> { getDisplayName(filterProfile) } </span>
                 </h6>
                 {:else}
-                <h6 id="feed-banner" class="pb-2 mb-0">Subscription Feed</h6>
+                <h6 id="feed-banner" class="pb-2 mb-0"><i id="contactMenuIcn" class="bi bi-list me-2" style="cursor: pointer; display: none;" on:click={toggleFollows} />Subscription Feed</h6>
                 {/if}
             </div>
         </div>
         <div class="row flex-grow-1 overflow-hidden">
-            <div class="col-3 mh-100 overflow-auto ">
+            <div class="col-3 mh-100 overflow-auto" id="followsPanel">
                 <div class="my-3  bg-body">
                     {#each sortContacts($contactStore) as profile}
                         <Follow {profile}/>

@@ -9,6 +9,7 @@
     import {EventsOn} from "../wailsjs/runtime/runtime.js";
 
     const onFindEventDialog = () => {
+        document.getElementById('findEvent').value = "";
         document.getElementById('launchFindEventDialog').click();
         setTimeout(() => {
             document.getElementById('findEvent').focus();

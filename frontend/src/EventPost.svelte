@@ -6,19 +6,21 @@
      *  The note text is parsed for links, images and nostr: links.
      */
 
-    import {EventsEmit, EventsOn} from "../wailsjs/runtime/runtime.js";
+    import {EventsEmit, EventsOn, EventsOnce, LogInfo} from "../wailsjs/runtime/runtime.js";
     import {
         GetTaggedProfiles,
         GetTaggedEvents,
         GetContactProfile,
         DeleteEvent,
-        PostEvent
+        PostEvent,
+        Nip19Decode
     } from "../wailsjs/go/main/App.js";
     import {eventStore} from "./EventStore";
     import LookupPk from "./LookupPk.svelte";
     import LookupEvent from "./LookupEvent.svelte";
     import loadingGif from "./assets/images/loading.gif"
     import humanizeDuration from "humanize-duration"
+    import {onMount} from "svelte";
 
     export let event;
 
@@ -27,11 +29,26 @@
     let taggedEvents = [];
     let showWaiting = false;
     let notFound = false;
+    // let content = "";
 
     const getWhen = (millis) => {
         return humanizeDuration(Math.floor(millis - event.created_at*1000), { round: true, units: ["y", "mo", "d", "h", "m"] });
     }
     let when = getWhen(Date.now());
+
+    onMount(async () => {
+        document.addEventListener("onHandleNostrLink", function(e) {
+            e.stopImmediatePropagation();
+            Nip19Decode(e.detail).then((parts)=> {
+                switch(parts[0]) {
+                    case "npub": EventsEmit("evProfileCardPk", parts[1]); break;
+                    case "nevent": EventsEmit("evEventDialog", parts[1]); break;
+                    case "note": EventsEmit("evEventDialog", parts[1]); break;
+                }
+            });
+            return true;
+        });
+    });
 
     const updateWhen = (now) => {
         when =  getWhen(now)
@@ -39,7 +56,7 @@
     EventsOn("evTimer", updateWhen);
 
     const parseContent = (txt) => {
-        return imageParse(newlineParse(httpLinkParse(nostrNpubLinkParse(nostrEventLinkParse(txt)))));
+        return nostrNip19Parse(imageParse(newlineParse(httpLinkParse(txt))));
     }
 
     const imageParse = (s) => {
@@ -60,21 +77,16 @@
         if(!s) {
             return "";
         }
-        return s.replace(/https?:\/\/(?!\S+(?:jpe?g|png|bmp|gif|webp))\S+/g, '<a href="#" onclick=runtime.BrowserOpenURL("$&") >$&</a>');
+        return s.replace(/https?:\/\/(?!\S+(?:jpe?g|png|bmp|gif|webp))\S+/g, '<a href="#" onclick=runtime.BrowserOpenURL("$&") >$&</a><br>');
     }
 
-    const nostrEventLinkParse = (s) => {
-        if(!s) {
+    const nostrNip19Parse = (s) => {
+        if (!s) {
             return "";
         }
-        return s.replace(/nostr:(\S[a-zA-Z0-9]+)/g, "<a href='#' data-bs-toggle=\"modal\" data-bs-target=\"#eventDialog\" onclick='runtime.EventsEmit(\"evEventDialog\", \"$1\");'> $& </a>");
+        return s.replace(/nostr:(\S[a-zA-Z0-9]+)/g, '<a href="#" onclick=window.handleNostrLink("$1")> $& </a>');
     }
-    const nostrNpubLinkParse = (s) => {
-        if(!s) {
-            return "";
-        }
-        return s.replace(/nostr:(npub\S[a-zA-Z0-9]+)/g, "<a href='#' data-bs-toggle=\"modal\" data-bs-target=\"#profileCard\" onclick='runtime.EventsEmit(\"evProfileCardPk\", \"$1\");'> $& </a>");
-    }
+
 
     const profileCard = (profile) => {
         EventsEmit("evProfileCard", profile);
@@ -136,10 +148,6 @@
         }).finally(()=>{
             showWaiting = false;
         });
-    }
-
-    const openEventDialog = (id) => {
-        EventsEmit("evEventDialog", id);
     }
 
     const confirmBoost = (ev, by) => {
@@ -209,15 +217,17 @@
             {#await GetTaggedProfiles(event.id)}
                 <img src="{loadingGif}" width="18" height="18">
             {:then profs}
-                {#each profs as prof}
-                    <LookupPk {prof} />
-                {/each}
+                {#if profs.length > 0}
+                    {#each profs as prof}
+                        <LookupPk {prof} />
+                    {/each}
+                {/if}
             {/await}
-            <!--{#each event.tags as tag}-->
-            <!--    {#if tag[0] === "t"}-->
-            <!--    <span class="text-warning">#{tag[1]} </span>-->
-            <!--    {/if}-->
-            <!--{/each}-->
+            {#each event.tags as tag}
+                {#if tag[0] === "t"}
+                <span class="text-warning">#{tag[1]} </span>
+                {/if}
+            {/each}
         </p>
 
             {#if event.kind === 1 }

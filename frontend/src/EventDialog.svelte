@@ -5,37 +5,32 @@
      */
 
     import {GetMyPubkey, GetTextNotesByEventIds, Nip19Decode} from "../wailsjs/go/main/App.js";
-    import {EventsOn} from "../wailsjs/runtime/runtime.js";
+    import {EventsOn, LogInfo} from "../wailsjs/runtime/runtime.js";
     import EventPost from "./EventPost.svelte";
+    import loadingGif from "./assets/images/loading.gif";
 
     let myPk;
-    let event = false;
+    let eventId = "";
+    let promise = false;
 
     const onEventDialog = (noteRef) => {
+        LogInfo("onEventDialog...");
+        eventId = noteRef;
+        promise = false;
         document.getElementById('launchEventDialog').click();
-        event = false;
         GetMyPubkey().then((pk) => {
             myPk = pk;
             if(noteRef.startsWith("note" || noteRef.startsWith("nevent"))) {
-                Nip19Decode(noteRef).then((hexId)=>{
-                   GetTextNotesByEventIds([hexId]).then((events)=>{
-                       if(events.length > 0) {
-                           event = events[0];
-                       }
-                   });
+                Nip19Decode(noteRef).then((parts)=>{
+                   promise = GetTextNotesByEventIds([parts[1]]);
                 }).catch((err)=>{
                     console.log("Error:" + err);
                 });
             } else {
-                GetTextNotesByEventIds([noteRef]).then((events)=>{
-                    if(events.length > 0) {
-                        event = events[0];
-                    }
-                });
+                promise = GetTextNotesByEventIds([noteRef]);
             }
         });
     }
-
     EventsOn('evEventDialog', onEventDialog);
 
 </script>
@@ -46,12 +41,18 @@
     <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content">
             <div class="modal-header">
-                <h1 class="modal-title fs-5" id="staticBackdropLabel">Event {event.id}</h1>
+                <h1 class="modal-title fs-5" id="staticBackdropLabel">Event {eventId}</h1>
                 <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                {#if event}
-                    <EventPost {event} {myPk}/>
+                {#if promise}
+                    {#await promise}
+                        <img src="{loadingGif}" width="18" height="18">
+                    {:then events}
+                        {#each events as event}
+                        <EventPost {event} {myPk}/>
+                        {/each}
+                    {/await}
                 {/if}
             </div>
             <div class="modal-footer">

@@ -1,5 +1,5 @@
 <script>
-    import {EventsOn} from "../wailsjs/runtime/runtime.js";
+    import {EventsOn, EventsEmit} from "../wailsjs/runtime/runtime.js";
 
     let readable = 0;
     let writable = 0;
@@ -24,11 +24,21 @@
     }
     EventsOn("evRelayStatus", onStatusUpdate);
 
+    const openRelayDialog = () => {
+        EventsEmit("evRelayDialog")
+    }
+
 </script>
 
 <style>
 </style>
 
-<span class="float-end text-muted">
-    <span class="mx-3">|</span>Subs: {subs}
-    <span class="mx-3">|</span><i class="bi bi-hdd-network-fill me-2 {colour} "/>R {readable} : W {writable}</span>
+<div class="float-end text-muted">
+
+    <span class="mx-3">|</span>Subs: {subs} <span class="mx-3" >|</span>
+    <span style="cursor: pointer;" on:click={()=>{openRelayDialog()}}>
+        <i class="bi bi-hdd-network-fill me-2 {colour}"/>
+        R {readable} : W {writable}
+    </span>
+
+</div>
